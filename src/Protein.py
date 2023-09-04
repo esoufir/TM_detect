@@ -1,7 +1,8 @@
 import argparse
 from Bio.PDB import *
 import numpy as np
-import sys
+
+import math
 
 from AminoAcid import * # je crois que c'est une mauvaise pratique mdr
 from Bio.PDB.DSSP import DSSP
@@ -19,11 +20,14 @@ class Protein:
     def add_to_amino_acid_sequence(self, new_amino_acid):
         self.amino_acid_sequence.append(new_amino_acid)
     
+    def set_mass_center(self, new_mass_center):
+        self.mass_center=new_mass_center
     
     def print_protein(self):
         for residue in self.amino_acid_sequence:
             print(residue.get_code(), end=" ")
         print()
+    
 
     # TODO: Fonction qui détermine tous les vecteurs directeurs du plan selon le centre de masse
     def find_directions():
@@ -62,6 +66,7 @@ def caculate_solvant_accessibility(structure, input_file,protein): # a voir pour
 
 def parse_pdb(input_file):
     #TODO: Parse the PDB File to get only one chain (pour le moment, cf extension) and get residues and atoms and put them in objects
+    print("Parsing the PDB file ...")
     p = PDBParser()
     # TODO: Adapt le X
     structure = p.get_structure("X", input_file)
@@ -70,27 +75,29 @@ def parse_pdb(input_file):
     protein = Protein(name=input_file[:-4])
     # Adapt with the condition of the exercise : 
     for model in structure:
+        print(f"Found{len(model)} chains in structure...")
         for chain in model:
+            protein.set_mass_center(compute_mass_center(chain))
             for residue in chain:
-                protein.set_mass_center(compute_mass_center(chain))
                 if residue.has_id("CA"):
                     # Creating and setting the AminoAcid object
                     new_amino_acid = AminoAcid(code=residue.get_resname(), id = id_amino_acid)
                     # Getting the C-alpha
-                    
                     atom = residue['CA']
                     x,y,z = atom.get_coord()
+                    # Creatingt the atom object
                     atom_object = AminoAcid.Atom(symbol=atom.get_name(),x=x,y=y,z=z, 
                                         amino_acid = new_amino_acid) 
+                    # Linking the CA atom to its amino acid object
                     new_amino_acid.add_atom_to_amino_acid(atom_object)
+                    # Linking the amino acid to its protein object
                     protein.add_to_amino_acid_sequence(new_amino_acid=new_amino_acid)
                     id_amino_acid+=1
-            protein.print_protein()
+            #protein.print_protein()
     
-    # Compute the the solvant accessibility and setting 
+    # Compute the the solvant accessibility and set it for each amino acid of the protein 
     caculate_solvant_accessibility(structure, input_file=input_file, protein=protein)
-    for aa in protein.get_amino_acid_sequence():     
-        aa.print_amino_acid()
+    
 
 
 if __name__ == '__main__':

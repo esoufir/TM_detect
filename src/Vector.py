@@ -1,6 +1,8 @@
 import matplotlib.pyplot  as plt
 import numpy as np
+import math
 
+#problème avec matplolib dans le venv
 class Vector:
     def __init__(self, x,y,z):
         self.x=x
@@ -8,21 +10,45 @@ class Vector:
         self.z=z
 
 # TODO: Mieux encapsuler avec Point et tout
-def find_directions(n_directions_wanted):
-    list_directions = None
-    for i in range(n_directions_wanted):
-        for a in range(1,10):#mouais
-            for b in range(1,10):
-                for c in range(1,10):
-                    np.append(list_directions,np.array([a,b,c]))
-    return list_directions
-    
+def find_points(n_points, center_coordinates):
+    x,y,z = center_coordinates
+    points = []
+    for k in range(1,n_points+1):
+        h = -1 + (2 * (k-1)/(n_points - 1))
+        theta = math.acos(h)
+        if k==1 or k==n_points:
+            phi = 0
+        else :
+            phi = (phi + (3.6/math.sqrt(n_points) * (1/math.sqrt(1-h*h)))) % (2*math.pi)
+        x = math.sin(phi) * math.sin(theta)
+        y = math.cos(theta)
+        z = math.cos(phi) * math.sin(theta)
+        points.append((x,y,z))
+    return points
+
+def find_director_vector(point, center_coordinate):
+    """Find the vector that goes through the two points"""
+    x1,y1,z1 = point
+    x2,y2,z2 = center_coordinate
+    return (x2-x1, y2 - y1, z2 - z1)
+
+def find_normal_plan(director_vector):
+    """Returns 2 normal vectors making a plan orthogonal to the director vector"""
+    x,y,z=director_vector
+    return ( (-y,x,0) , (-z,0,x))
+  
+
 if __name__ == '__main__':
     print("Test vector")
-    directions = find_directions(5)
-    fig = plt.figure()
-    """ax = fig.add_subplot(111, projection='3d')
+    directions = find_points(200, (0,0,0))
+  
+    """fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
     
     for d in directions:
-        ax.quiver(0, 0, 0, d[0], d[1], d[2], arrow_length_ratio=0.1)  
+        ax.scatter3D(d[0], d[1], d[2])
     plt.show()"""
+
+
+
+

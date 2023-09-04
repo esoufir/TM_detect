@@ -8,7 +8,7 @@ class AminoAcid:
             self.is_hydrophobic = False
             # molecule .... ? Avec quelle structure de données la représenter
             if code in AminoAcid.hydrophobics_amino_acids:
-                is_hydrophobic = True
+                self.is_hydrophobic = True
             self.atoms_list = []
             self.asa = 0
         
