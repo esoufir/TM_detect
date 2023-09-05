@@ -93,14 +93,17 @@ def parse_pdb(input_file):
                     # Linking the amino acid to its protein object
                     protein.add_to_amino_acid_sequence(new_amino_acid=new_amino_acid)
                     id_amino_acid+=1
-            #protein.print_protein()
     
     # Compute the the solvant accessibility and set it for each amino acid of the protein 
-    caculate_solvant_accessibility(structure, input_file=input_file, protein=protein)
-    
+    # TODO: Ne garder que les résidus accessibles au solvant, donc ne créer que ces objets
+    caculate_solvant_accessibility(structure, input_file=input_file, protein=protein)    
+
+
+# TODO:All the logging file https://docs.python.org/3/howto/logging.html
 
 
 if __name__ == '__main__':
+    # TODO: Compléter cela
     parser = argparse.ArgumentParser(
                     prog='ProgramName',
                     description='What the program does',

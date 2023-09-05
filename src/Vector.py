@@ -1,6 +1,7 @@
 import matplotlib.pyplot  as plt
 import numpy as np
 import math
+import copy 
 
 #problème avec matplolib dans le venv
 class Vector:
@@ -65,23 +66,17 @@ class Plane:
         self.d=d
     
     def plot_plane(self, plane2=None):
-        # d of the plan equation
-        d = -self.point.dot_product(self.normal)
         xx, yy = np.meshgrid(range(10), range(10))
 
         # calculate corresponding z
         if self.normal.get_z()!=0 : # mouais, plutot faire en sorte quil ne soit jamais 0
-            z = (-self.normal.get_x() * xx - self.normal.get_y() * yy - d) * 1. /self.normal.get_z()
+            z = (-self.normal.get_x() * xx - self.normal.get_y() * yy - self.d) * 1. /self.normal.get_z()
             fig = plt.figure()
             ax = fig.add_subplot(projection='3d')
-            ax.plot_surface(xx, yy, z, alpha=0.2)
+            ax.plot_surface(xx, yy, z, alpha=0.2, color="green")
             if plane2 != None:
-                print("INNNNNNNNNNNNNNNnnn")
-                d2 = -plane2.point.dot_product(plane2.normal)
-                z2 = (-plane2.normal.get_x() * xx - plane2.normal.get_y() * yy - d2) * 1. /plane2.normal.get_z()
+                z2 = (-plane2.normal.get_x() * xx - plane2.normal.get_y() * yy - plane2.get_d()) * 1. /plane2.normal.get_z()
                 ax.plot_surface(xx, yy, z2, color = 'red', alpha=0.2)
-                print(plane2.d)
-                print(self.d)
             plt.show()
         else :
             print("Division par 0 imposssible")
@@ -91,19 +86,30 @@ class Plane:
     
     def complementary(self, gap):
         # gap in Angstrom
-        complementary_plane = self
-        print("COMPLEMENTARY PLANE", complementary_plane.d)
+        # Copying the object
+        complementary_plane = copy.deepcopy(self)
         complementary_plane.set_d(complementary_plane.get_d() - gap)
         return complementary_plane
 
 
-
+    def slide_plane(self, sliding_window):
+        # slide the plane 
+        self.d += sliding_window
+    
+    #TODO: Ces 2 fonctions
+    def is_over(point):
+        # Return true if the point is located over the plane (self)
+        pass
+    
+    def is_under(point):
+        # Return true if the point is located under the plane (self)
+        pass
 
 # TODO: faire que le demi cercle
 # TODO : Régler le probleme du centre de la sphère = centre de masse
 def find_points(n_points, center_coordinates):
     points = []
-    for k in range(1,n_points+1):
+    for k in range(1,n_points+1):# n-points pour éviter division par 0 
         h = -1 + (2 * (k-1)/(n_points - 1))
         theta = math.acos(h)
         if k==1 or k==n_points:
@@ -122,16 +128,6 @@ def find_director_vector(point:Point, center_coordinate:Point):
     # The normal vector of the plan
     return Point(center_coordinate.get_x()-point.get_x(), center_coordinate.get_y() - point.get_y(), center_coordinate.get_z() - point.get_z())
 
-"""def find_plane_equation(normal_vector, point, x,y,z):
-    # When knowing a point and the normal vector, the following formula gives the plan equation : 
-    xA,yA,zA = point
-    # Coordinates of the normal vector : encapsule moi ca pour pouvoir self.x...
-    a,b,c = normal_vector
-    return (a (x-xA) + b *(y-yA) + c *(z-zA))"""
-
-def find_complemantary_plane(plane, scale):
-    return
-
 
 def find_normal_plan(director_vector):
     """Returns 2 normal vectors making a plan orthogonal to the director vector"""
@@ -141,33 +137,33 @@ def find_normal_plan(director_vector):
   
 
 if __name__ == '__main__':
-    print("Test vector")
     # Plot points check
-    
     mass_center = Point(1,1,1)
 
     directions = find_points(2, mass_center)
-    fig = plt.figure()
+    """fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter3D(1, 1, 1, color="red")
     print("Plotting the points on 3D")
     for d in directions:
         print(d.get_x(), d.get_y(), d.get_z())
         ax.scatter3D(d.get_x(), d.get_y(), d.get_z())
-    plt.show()
+    plt.show()"""
     print("Calculating the planes... ")
-
     # Planes are defined by a point and a normal vector
-
     for d in directions:
         point  = d
         normal = find_director_vector(point=d,center_coordinate=mass_center)
         print("Plotting the planes on 3D")
         plane = Plane(point=point, normal=normal)
-        plane2 = plane.complementary(14)
-        print("PLANES", plane.d, plane2.d)
-        
+        plane2 = plane.complementary(14)        
         plane.plot_plane(plane2)
+        plane.slide_plane(100) 
+        plane2.slide_plane(100)
+        print(plane.d)
+        print(plane2.d)
+        plane.plot_plane(plane2)
+    
         
 
 
