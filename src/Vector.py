@@ -53,14 +53,7 @@ class Plane:
         self.c = normal.get_coordinates()[2]
         self.d = -self.point.dot_product(self.normal)
     
-    def get_a(self):
-        return self.a
-    def get_b(self):
-        return self.b
-    def get_c(self):
-        return self.c
-    def get_d(self):
-        return self.d
+
     
     def set_d(self, d):
         self.d=d
@@ -97,13 +90,13 @@ class Plane:
         self.d += sliding_window
     
     #TODO: Ces 2 fonctions
-    def is_over(point):
+    def is_over(self,point):
         # Return true if the point is located over the plane (self)
-        pass
+        return True if self.a * point.x + self.b * point.y + self.c * point.z + self.d > 0 else False
     
-    def is_under(point):
+    def is_under(self,point):
         # Return true if the point is located under the plane (self)
-        pass
+        return True if self.a * point.x + self.b * point.y + self.c * point.z + self.d < 0 else False
 
 # TODO: faire que le demi cercle
 # TODO : Régler le probleme du centre de la sphère = centre de masse
@@ -136,19 +129,19 @@ def find_normal_plan(director_vector):
 
   
 
-if __name__ == '__main__':
+"""if __name__ == '__main__':
     # Plot points check
     mass_center = Point(1,1,1)
 
     directions = find_points(2, mass_center)
-    """fig = plt.figure()
+    fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter3D(1, 1, 1, color="red")
     print("Plotting the points on 3D")
     for d in directions:
         print(d.get_x(), d.get_y(), d.get_z())
         ax.scatter3D(d.get_x(), d.get_y(), d.get_z())
-    plt.show()"""
+    plt.show()
     print("Calculating the planes... ")
     # Planes are defined by a point and a normal vector
     for d in directions:
@@ -160,9 +153,7 @@ if __name__ == '__main__':
         plane.plot_plane(plane2)
         plane.slide_plane(100) 
         plane2.slide_plane(100)
-        print(plane.d)
-        print(plane2.d)
-        plane.plot_plane(plane2)
+        plane.plot_plane(plane2)"""
     
         
 

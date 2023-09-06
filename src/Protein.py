@@ -28,10 +28,7 @@ class Protein:
             print(residue.get_code(), end=" ")
         print()
     
-
-    # TODO: Fonction qui détermine tous les vecteurs directeurs du plan selon le centre de masse
-    def find_directions():
-        pass
+    
 
 
 # TODO: Méthode qui calcule le centre de masse:,  a voir si on le calcule à la main ou pas et si on la met dans la classe protéine oupas
@@ -75,7 +72,7 @@ def parse_pdb(input_file):
     protein = Protein(name=input_file[:-4])
     # Adapt with the condition of the exercise : 
     for model in structure:
-        print(f"Found{len(model)} chains in structure...")
+        print(f"Found {len(model)} chains in structure...")
         for chain in model:
             protein.set_mass_center(compute_mass_center(chain))
             for residue in chain:
@@ -96,7 +93,9 @@ def parse_pdb(input_file):
     
     # Compute the the solvant accessibility and set it for each amino acid of the protein 
     # TODO: Ne garder que les résidus accessibles au solvant, donc ne créer que ces objets
-    caculate_solvant_accessibility(structure, input_file=input_file, protein=protein)    
+    caculate_solvant_accessibility(structure, input_file=input_file, protein=protein)
+
+
 
 
 # TODO:All the logging file https://docs.python.org/3/howto/logging.html
