@@ -1,8 +1,10 @@
+import Vector # changer le nom
+
 class AminoAcid:
         
         hydrophobics_amino_acids = ['PHE','GLY','ILE','LEU','MET', 'VAL', 'TRP', 'TYR']
         #TODO: Que faire des OH ? 
-        def __init__(self, code, id):
+        def __init__(self, code, id,x,y,z):
             self.id = id
             self.code = code
             self.is_hydrophobic = False
@@ -11,6 +13,7 @@ class AminoAcid:
                 self.is_hydrophobic = True
             self.atoms_list = []
             self.asa = 0
+            self.point = Vector.Point(x,y,z)
         
         def print_amino_acid(self):
             print("Amino Acid id", self.id)
@@ -27,10 +30,5 @@ class AminoAcid:
             #Setter - Sets solvant accessibility
             self.asa=asa
         
-        class Atom:
-            def __init__(self, symbol,x,y,z, amino_acid):
-                self.amino_acid = amino_acid # pas sure
-                self.symbol=symbol
-                self.x = x
-                self.y = y
-                self.z = z
+        def __str__(self):
+            return f"AA n°{self.id} is {self.code}. Is hydrophobic ? {self.is_hydrophobic}. Solvant access : {self.asa}\n"
