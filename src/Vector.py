@@ -96,14 +96,14 @@ class Plane:
     def is_above(self,point):
         # Return true if the point is located over the plane (self)
         print(self,point)
-        print("Result is over",self.a * point.get_x() + self.d )
-        return True if self.a * point.get_x() + self.d > point.get_z() else False
+        print("Result is over",self.a * point.get_x() + self.d, "\t", point.get_z())
+        return True if self.a * point.get_x() + self.d < point.get_z() else False
     
     def is_below(self, point):
         # Return true if the point is located under the plane (self)
         print(self,point)
-        print("Result is under",self.a * point.get_x() + self.b * point.get_y() + self.c * point.get_z() + self.d )
-        return True if self.a * point.get_x() + self.d < 0 else False
+        print("Result is under",self.a * point.get_x() + self.d,"\t", point.get_z())
+        return True if self.a * point.get_x() + self.d > point.get_z() else False
 
 # TODO: faire que le demi cercle
 def find_points(n_points, center_coordinates):
@@ -152,14 +152,17 @@ if __name__ == '__main__':
     for d in directions:
         point  = d
         normal = find_director_vector(point=d,center_coordinate=mass_center)
-        print("Plotting the planes on 3D")
-        plane = Plane(point=point, normal=normal)
-        plane2 = plane.complementary(200)        
-        plane.slide_plane(10) 
-        plane2.slide_plane(10)
-        plane.plot_plane(plane2,Point(6.462 , 37.060 , 37.424))
-        print("is under ? ",plane.is_below(Point(6.462 , 37.060 , 37.424)))
-        print("is over ? ",plane2.is_above(Point(6.462 , 37.060 , 37.424)))
+        if normal.get_z() != 0:
+            print("Plotting the planes on 3D")
+            plane = Plane(point=point, normal=normal)
+            plane2 = plane.complementary(200)        
+            plane.slide_plane(10) 
+            plane2.slide_plane(10)
+            plane.plot_plane(plane2,Point(6.462 , 37.060 , 37.424))
+            print("is under ? ",plane.is_below(Point(6.462 , 37.060 , 37.424)))
+            print("is over ? ",plane2.is_above(Point(6.462 , 37.060 , 37.424)))
+        else:
+            print("Vecteur directeur nul (z), pass")
     
         
 
