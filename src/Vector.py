@@ -1,7 +1,9 @@
-import matplotlib.pyplot  as plt
 import numpy as np
 import math
 import copy 
+import subprocess
+from Bio.PDB import PDBParser
+from Bio.PDB.DSSP import DSSP
 
 #problème avec matplolib dans le venv
 class Vector:
@@ -82,16 +84,7 @@ class Plane:
         # Return true if the point is located under the plane (self)
         return True if (self.a * point.get_x() +self.b * point.get_y() + self.c * point.get_z() + self.d )   < 0 else False
 
-    # TODO: Faire ca de manière plus efficace
-    def generate_points(self):
-        coordinates = []
-        for x in range(10):
-            for y in range(10):
-                for z in range(10):
-                    # SI eqation de plan == 0 : alors le point appartient au plan
-                    if round(self.a * x) + round(self.b * y) + round(self.c * z) + round(self.d) == 0:
-                        coordinates.append(Point(x,y,z))
-        return coordinates
+    
 
 class Axis:
     def __init__(self,p1,p2):
@@ -112,22 +105,23 @@ class Axis:
         for aa in (amino_acid_sequence):
             if (self.plane1.is_below(aa.point) and self.plane2.is_above(aa.point)) or self.plane2.is_below(aa.point) and self.plane1.is_above(aa.point):
                 number_atoms_in_between+=1
-                if aa.asa > 0.30 :#and aa.is_hydrophobic == True
+                #print("ASA", aa.asa )
+                if aa.asa > 0.30 and aa.is_hydrophobic == True :
                     in_between_planes.append(aa.id)
                     number_atoms_hits+=1
                     #print("ca is under plane a and is over p2", aa)
+        
         if number_atoms_in_between == 0:
             print("No more atoms in between")
             return False
-        """print("----------------------------")
-        for a in in_between_planes:
-            print(a,end="+")"""
+        
         #print(f"Hit ratio {number_atoms_hits} \t {number_atoms_in_between} = {number_atoms_hits/number_atoms_in_between}")
         if number_atoms_hits > self.best_number_hits:
             # Updating the "best" match
-            self.best_number_hits=number_atoms_hits
+            # print("IIIIIIIIIIIIIIIIIIIIIIIIII")
+            self.best_number_hits = number_atoms_hits
             self.best_number_aa = number_atoms_in_between
-        return True if len(in_between_planes)>0 else False
+        return True if len(in_between_planes) > 0 else False
 
 
 def plot_plane(plane1, plane2=None, point=None):
@@ -175,19 +169,46 @@ def find_normal_plan(director_vector):
     x,y,z=director_vector
     return ( np.array([-y,x,0]) , np.array([-z,0,x]))
 
-  
+def caculate_solvant_accessibility(structure, input_file): # a voir pour identifier le bon aa
+        # Using DSSP
+        print("Computing solvant accessibility...")
+
+        model = structure[0]
+        dssp = DSSP(model, input_file)
+        # Store ASA values for each residue
+        asa_values = {}
+
+        # Iterate over the residues in the structure
+        for residue in model.get_residues():
+            chain_id = residue.parent.id
+            residue_id = residue.id
+            key = (chain_id, residue_id)
+            if key in dssp:
+                asa_value = dssp[key][3]  # ASA value for the residue
+                asa_values[key] = asa_value
+        # Now, asa_values is a dictionary containing ASA values for each residue in the structure
+        return asa_values
 
 if __name__ == '__main__':
     # Plot points check
-    mass_center = Point(3.19,37.1,36.2)
+    pdb = "../data/1prn.pdb"
+    p = PDBParser()
+    # TODO: Adapt le X
+    structure = p.get_structure("X", pdb)
+
+    caculate_solvant_accessibility(structure, input_file=pdb)
+
+
+    
+    """mass_center = Point(3.19,37.1,36.2)
     directions = find_points(10, mass_center)
-    """fig = plt.figure()
+    fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter3D(mass_center.get_x(), mass_center.get_y(), mass_center.get_z(), color="red")
     print("Plotting the points on 3D")
     for d in directions:
         ax.scatter3D(d.get_x(), d.get_y(), d.get_z())
-    plt.show()"""
+    plt.show()
     print("Calculating the planes... ")
     # Planes are defined by a point and a normal vector
     for d in directions:
@@ -204,7 +225,7 @@ if __name__ == '__main__':
             plot_plane(plane1=plane,plane2 = plane2, point = Point(6.462 , 37.060 , 37.424))
         else:
             print("Vecteur directeur nul (z), pass --- ")
-        
+        """
 
 
 

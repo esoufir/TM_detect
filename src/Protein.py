@@ -2,11 +2,10 @@ import argparse
 from Bio.PDB import *
 import numpy as np
 import pymol
-
+import subprocess
 import math
 
 from AminoAcid import * # je crois que c'est une mauvaise pratique mdr
-from Bio.PDB.DSSP import DSSP
 import Vector
 
 class Protein:
@@ -54,21 +53,18 @@ def check_input_file(input_file):
     # TODO: Check extension, ...
     with open(input_file, "r") as handle:
         header_dict = parse_pdb_header(handle)
-        print(header_dict)
-
-
-def naccess(input_file):
-    return Bio.PDB.NACCESS.run_naccess(input_file)
 
 
 def caculate_solvant_accessibility(structure, input_file,protein): # a voir pour identifier le bon aa
     # Using DSSP
+    print("Computing solvant accessibility...")
     model = structure[0]
-    dssp = DSSP(model, input_file)
+    dssp = DSSP(model, input_file, dssp='mkdssp')
     # Pour chaque acide aminé, on a ASA = Accessible Surface Area
     for i in range(len(dssp.keys())):
         a_key = list(dssp.keys())[i]
-        protein.get_amino_acid_sequence()[i].set_asa(dssp[a_key][3])#pas sure pour i
+        protein.get_amino_acid_sequence()[i].set_asa(dssp[a_key][3])#pas sure pour i"""
+    
 
 
 
@@ -80,7 +76,7 @@ def parse_pdb(input_file):
     structure = p.get_structure("X", input_file)
     # TODO :mieux subdiviser en fonctions
     id_amino_acid = 1
-    protein = Protein(name=input_file[:-4])
+    protein = Protein(name=input_file[8:-4])
     # Adapt with the condition of the exercise : 
     for model in structure:
         print(f"Found {len(model)} chains in structure...")
@@ -98,7 +94,6 @@ def parse_pdb(input_file):
                     protein.add_to_amino_acid_sequence(new_amino_acid=new_amino_acid)
                     id_amino_acid+=1
     # Compute the the solvant accessibility and set it for each amino acid of the protein 
-    
     # TODO: Ne garder que les résidus accessibles au solvant, donc ne créer que ces objets
     caculate_solvant_accessibility(structure, input_file=input_file, protein=protein)
     return protein
@@ -117,6 +112,7 @@ if __name__ == '__main__':
     #parser.add_argument('-c', '--count')      # option that takes a value
     args = parser.parse_args()
     print(f"Command : Protein.py {args.filename}")# to adapt
+    
     protein = parse_pdb(args.filename)
     # Number of points
     n = 40
@@ -127,18 +123,17 @@ if __name__ == '__main__':
         point  = d
         # Find the normal vector
         normal = Vector.find_director_vector(point=d, center_coordinate=protein.mass_center)
-        #Construction of the two planes representing the membrane : 
+        # Construction of the two planes representing the membrane : 
         plane1 = Vector.Plane(point=point, normal=normal)
         plane2 = plane1.complementary(14)  # 14 Angstrom, à voir pour la modularité TODO
 
-        #TODO : search residues in the space -> function
-        # end = False
         axis = Vector.Axis(p1=plane1,p2=plane2)
         # Looking above : 
         while axis.explore_axe(protein.amino_acid_sequence) == True:
             #Sliding the planes if necessary 
             plane1.slide_plane(1) 
             plane2.slide_plane(1)# adapte la gap je pense
+        
         # Resetting start positions
         plane1 = Vector.Plane(point=point, normal=normal)
         plane2 = plane1.complementary(14)  # 14 Angstrom, à voir pour la modularité TODO
@@ -150,5 +145,63 @@ if __name__ == '__main__':
         protein.best_positions.append(axis)
         
         #print(f"With this axis, {axis.best_number_hits} hits for {axis.best_number_aa} amino acids in-between, so a ratio of : {axis.best_number_hits/axis.best_number_aa}")
-    print("BEST AXIS IS ", protein.find_best_axis())
+   
+    best_axis = protein.find_best_axis()
+    print("BEST AXIS IS ", best_axis)
+
+    plane1 = best_axis.plane1
+    plane2 = best_axis.plane2
+
+    # TODO: Faire l'optimisation de la largeur de la membrane
+    pymol.finish_launching()
+    pymol.cmd.load("../data/1prn.pdb", "molecule_name")
+
+    # Create two dummy objects
+    # TODO : Adapt
+    x_min, x_max = -20, 20
+    y_min, y_max = -20, 20
+
+    # Define the step size for sampling points
+    step = 2
+
+    # Initialize an empty list to store the points
+    points_on_plane = []
+
+    # Generate points on the plane
+    for x in np.arange(x_min, x_max + step, step):
+        for y in np.arange(y_min, y_max + step, step):
+            # Calculate z coordinate using the plane equation
+            z = (-plane1.a * x - plane1.b * y - plane1.d) / plane1.c
+            points_on_plane.append((x, y, z))
+            
+    for idx, point in enumerate(points_on_plane):
+        x, y, z = point
+        atom_name = f"dummy_{idx}"
+        pymol.cmd.pseudoatom(atom_name, pos=[x, y, z], color="red")
+        pymol.cmd.show("spheres", f"dummy_{idx}")
+
+    
+    # Initialize an empty list to store the points
+    points_on_plane = []
+
+    # Generate points on the plane
+    for x in np.arange(x_min, x_max + step, step):
+        for y in np.arange(y_min, y_max + step, step):
+            # Calculate z coordinate using the plane equation
+            z = (-plane2.a * x - plane2.b * y - plane2.d) / plane2.c
+            points_on_plane.append((x, y, z))
+            
+    for idx, point in enumerate(points_on_plane):
+        x, y, z = point
+        atom_name = f"dummy_{idx}"
+        pymol.cmd.pseudoatom(atom_name, pos=[x, y, z], color="red")
+        pymol.cmd.show("spheres", f"dummy_{idx}")
+    # Protein :        
+    pymol.cmd.show("cartoon", "molecule_name")
+
+    # Zoom to fit the view
+    pymol.cmd.zoom()
+
+    # Save an image if needed
+    pymol.cmd.png("planes.png")
 

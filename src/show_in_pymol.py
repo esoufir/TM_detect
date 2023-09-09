@@ -1,5 +1,5 @@
 # Import PyMOL modules
-from pymol import *
+import pymol
 import numpy as np
 import math
 import copy 
@@ -180,11 +180,9 @@ if __name__ == '__main__':
             finish_launching()
             # Open the PyMOL GUI
             
-            cmd.load("../data/1prn.pdb", "molecule_name")
+            pymol.cmd.load("../data/1prn.pdb", "molecule_name")
             #cmd.load("../data/1prn.pdb")
 
-
-            # Create two dummy objects
             # Define the range of x and y coordinates
             x_min, x_max = -10, 10
             y_min, y_max = -10, 10
@@ -205,38 +203,13 @@ if __name__ == '__main__':
             for idx, point in enumerate(points_on_plane):
                 x, y, z = point
                 atom_name = f"dummy_{idx}"
-                cmd.pseudoatom(atom_name, pos=[x, y, z], color="yellow")
-                cmd.show("spheres", f"dummy_{idx}")
+                pymol.cmd.pseudoatom(atom_name, pos=[x, y, z], color="red")
+                pymol.cmd.show("spheres", f"dummy_{idx}")
             
-            cmd.show("cartoon", "molecule_name")
-
-            input("Press Enter to exit...")
-
-            # Quit PyMOL
-            cmd.quit()
-            #cmd.pseudoatom('dummy2', pos=[0, 0, 0])
-
-            # Define the vertices for the first plane (modify as needed)
-            
-
-            # Create the first plane using the "plane" command
-            #cmd.load_cgo(plane1_vertices, 'plane1', state=0)
-            #cmd.show_as('lines', 'plane1')
-
-            # Create the second plane using the "plane" command
-            """cmd.load_cgo(plane2_vertices, 'plane2', state=0)
-            cmd.show_as('lines', 'plane2')"""
-
-            # Set the color of the planes (modify as needed)
-            #cmd.color('blue', 'plane1')
-            #cmd.color('red', 'plane2')
-
-            # Show the planes
-            #cmd.show('ribbon', 'plane1')
-            """cmd.show('sticks', 'plane2')"""
+            pymol.cmd.show("cartoon", "molecule_name")
 
             # Zoom to fit the view
-            cmd.zoom()
+            pymol.cmd.zoom()
 
             # Save an image if needed
-            cmd.png("planes.png")
+            pymol.cmd.png("planes.png")
