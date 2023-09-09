@@ -1,4 +1,5 @@
-import matplotlib.pyplot  as plt
+# Import PyMOL modules
+from pymol import *
 import numpy as np
 import math
 import copy 
@@ -130,22 +131,6 @@ class Axis:
         return True if len(in_between_planes)>0 else False
 
 
-def plot_plane(plane1, plane2=None, point=None):
-        X, Z = np.meshgrid(range(100), range(100))
-        # Calculate the corresponding y values for the plane
-        # mouais, plutot faire en sorte quil ne soit jamais 0
-        fig = plt.figure()
-        ax = fig.add_subplot(projection='3d')
-        ax.scatter3D(point.get_x(), point.get_y(), point.get_z(), color="red")
-        if point is not None and plane1.d !=0 :
-            Y1 = (-plane1.a * X - plane1.c * Z - plane1.d) / plane1.b
-            ax.plot_surface(X, Y1, Z, alpha=0.2, color = "green")
-
-        if plane2 is not None and plane2.d !=0:
-            Y2 = (-plane2.a * X - plane2.c * Z - plane2.d) / plane2.b
-            ax.plot_surface(X, Y2, Z, color = 'red', alpha=0.2)
-        plt.show()
-
 # TODO: faire que le demi cercle
 def find_points(n_points, center_coordinates):
     points = []
@@ -181,13 +166,7 @@ if __name__ == '__main__':
     # Plot points check
     mass_center = Point(3.19,37.1,36.2)
     directions = find_points(10, mass_center)
-    """fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.scatter3D(mass_center.get_x(), mass_center.get_y(), mass_center.get_z(), color="red")
-    print("Plotting the points on 3D")
-    for d in directions:
-        ax.scatter3D(d.get_x(), d.get_y(), d.get_z())
-    plt.show()"""
+    
     print("Calculating the planes... ")
     # Planes are defined by a point and a normal vector
     for d in directions:
@@ -198,16 +177,66 @@ if __name__ == '__main__':
             plane = Plane(point=point, normal=normal)
             plane2 = plane.complementary(14)        
             plane.slide_plane(10) 
-            #plane2.slide_plane(-60)
-            # Plane = green
-            # Plane2 = red
-            plot_plane(plane1=plane,plane2 = plane2, point = Point(6.462 , 37.060 , 37.424))
-        else:
-            print("Vecteur directeur nul (z), pass --- ")
-        
+            finish_launching()
+            # Open the PyMOL GUI
+            
+            cmd.load("../data/1prn.pdb", "molecule_name")
+            #cmd.load("../data/1prn.pdb")
 
 
+            # Create two dummy objects
+            # Define the range of x and y coordinates
+            x_min, x_max = -10, 10
+            y_min, y_max = -10, 10
 
+            # Define the step size for sampling points
+            step = 3
 
+            # Initialize an empty list to store the points
+            points_on_plane = []
 
+            # Generate points on the plane
+            for x in np.arange(x_min, x_max + step, step):
+                for y in np.arange(y_min, y_max + step, step):
+                    # Calculate z coordinate using the plane equation
+                    z = (-plane.a * x - plane.b * y - plane.d) / plane.c
+                    points_on_plane.append((x, y, z))
+            
+            for idx, point in enumerate(points_on_plane):
+                x, y, z = point
+                atom_name = f"dummy_{idx}"
+                cmd.pseudoatom(atom_name, pos=[x, y, z], color="yellow")
+                cmd.show("spheres", f"dummy_{idx}")
+            
+            cmd.show("cartoon", "molecule_name")
 
+            input("Press Enter to exit...")
+
+            # Quit PyMOL
+            cmd.quit()
+            #cmd.pseudoatom('dummy2', pos=[0, 0, 0])
+
+            # Define the vertices for the first plane (modify as needed)
+            
+
+            # Create the first plane using the "plane" command
+            #cmd.load_cgo(plane1_vertices, 'plane1', state=0)
+            #cmd.show_as('lines', 'plane1')
+
+            # Create the second plane using the "plane" command
+            """cmd.load_cgo(plane2_vertices, 'plane2', state=0)
+            cmd.show_as('lines', 'plane2')"""
+
+            # Set the color of the planes (modify as needed)
+            #cmd.color('blue', 'plane1')
+            #cmd.color('red', 'plane2')
+
+            # Show the planes
+            #cmd.show('ribbon', 'plane1')
+            """cmd.show('sticks', 'plane2')"""
+
+            # Zoom to fit the view
+            cmd.zoom()
+
+            # Save an image if needed
+            cmd.png("planes.png")

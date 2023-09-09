@@ -31,4 +31,4 @@ class AminoAcid:
             self.asa=asa
         
         def __str__(self):
-            return f"AA n°{self.id} is {self.code}. Is hydrophobic ? {self.is_hydrophobic}. Solvant access : {self.asa}\n"
+            return f"AA n°{self.id} is {self.code} at ({self.point.get_x():.3f},{self.point.get_y():.3f},{self.point.get_z():.3f}) \n"
