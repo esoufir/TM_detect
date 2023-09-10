@@ -4,7 +4,7 @@ import copy
 import subprocess
 from Bio.PDB import PDBParser
 from Bio.PDB.DSSP import DSSP
-
+import matplotlib.pyplot as plt
 
 class Vector:
     def __init__(self, x, y, z):
@@ -57,7 +57,7 @@ class Plane:
         self.b = normal.get_coordinates()[1]
         self.c = normal.get_coordinates()[2]
         # self.d = -self.point.dot_product(self.normal)
-        self.d = -self.a * self.point.get_x() - self.b * self.point.get_y() - self.c * self.point.get_z()  # https://mathworld.wolfram.com/Plane.html
+        self.d = -(self.a * self.point.get_x() + self.b * self.point.get_y() + self.c * self.point.get_z())  # https://mathworld.wolfram.com/Plane.html
 
     def __str__(self):
         return f"Plane equation is : {self.a}x + {self.b}y +{self.c}z + {self.d} = 0\n"
@@ -85,16 +85,17 @@ class Plane:
         return True if (
                                    self.a * point.get_x() + self.b * point.get_y() + self.c * point.get_z() + self.d) < 0 else False
 
-
+# TODO : Error handling
 class Axis:
     def __init__(self, p1, p2):
-        self.plane1 = p1
+        self.plane1 = p1 # deep copy ?
         self.plane2 = p2
         self.best_number_hits = 0
         self.best_number_aa = 0
+        self.best_ratio = 0
 
     def __str__(self):
-        return f"AXIS with best nb hits has {(self.best_number_hits/self.best_number_aa)*100:.3f}%"
+        return f"AXIS with best nb hits has {(self.best_number_hits/self.best_number_aa)*100:.3f}% {self.plane1}"
 
     def explore_axe(self, amino_acid_sequence):
         # TODO: Quand la tranche qu'on regarde ne contient aucun Calpha => BREAk Je crois que c'est ce qui est fait
@@ -103,7 +104,6 @@ class Axis:
         in_between_planes = []
         number_atoms_in_between = 0
         number_atoms_hits = 0
-        best_axis = None
         for aa in (amino_acid_sequence):
             if (self.plane1.is_below(aa.point) and self.plane2.is_above(aa.point)) or self.plane2.is_below(
                     aa.point) and self.plane1.is_above(aa.point):
@@ -117,21 +117,55 @@ class Axis:
             print("No more atoms in between")
             return (False)
 
-        # print(f"Hit ratio {number_atoms_hits} \t {number_atoms_in_between} = {
-        # number_atoms_hits/number_atoms_in_between}")
-        if number_atoms_hits > self.best_number_hits:
+        #print(f"Hit ratio {number_atoms_hits} \t {number_atoms_in_between} = {number_atoms_hits/number_atoms_in_between}")
+        if  number_atoms_hits > self.best_number_hits:
             # Updating the "best" match
             self.best_number_hits = number_atoms_hits
             self.best_number_aa = number_atoms_in_between
         return (True) if len(in_between_planes) > 0 else (False)
 
 
-"""def plot_plane(plane1, plane2=None, point=None):
+    def explore_axe_bis(self, amino_acid_sequence):
+        # Otpmizing membrane width = maximize ratio
+        in_between_planes = []
+        number_atoms_in_between = 0
+        number_atoms_hits = 0
+        
+        for aa in (amino_acid_sequence):
+            if (self.plane1.is_below(aa.point) and self.plane2.is_above(aa.point)) or self.plane2.is_below(
+                    aa.point) and self.plane1.is_above(aa.point):
+                number_atoms_in_between += 1
+                # If the amino acid is hydrophobic and exposed, then it's a hit
+                if aa.asa > 0.30 and aa.is_hydrophobic == True:
+                    in_between_planes.append(aa.id)
+                    number_atoms_hits += 1
+                    # print("ca is under plane a and is over p2", aa)
+        ratio = number_atoms_hits/number_atoms_in_between
+        print("RATIO", ratio)
+        print(self.plane1, self.plane2)
+        # If better ratio
+        if  ratio > self.best_ratio:
+            # Updating the "best" match
+            self.best_ratio = ratio
+            self.best_number_hits = number_atoms_hits
+            self.best_number_aa = number_atoms_in_between
+            return True # its better, so we continue the while
+        else:
+            # its not better
+            return False
+
+
+
+def plot_plane(plane1, plane2=None, point=None):
     X, Z = np.meshgrid(range(100), range(100))
     # Calculate the corresponding y values for the plane
     # mouais, plutot faire en sorte quil ne soit jamais 0
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
+    #mass center:
+
+    ax.scatter3D(3.19,37.1,36.2, color="blue")
+
     ax.scatter3D(point.get_x(), point.get_y(), point.get_z(), color="red")
     if point is not None and plane1.d != 0:
         Y1 = (-plane1.a * X - plane1.c * Z - plane1.d) / plane1.b
@@ -140,7 +174,7 @@ class Axis:
     if plane2 is not None and plane2.d != 0:
         Y2 = (-plane2.a * X - plane2.c * Z - plane2.d) / plane2.b
         ax.plot_surface(X, Y2, Z, color='red', alpha=0.2)
-    plt.show()"""
+    plt.show()
 
 
 # TODO: faire que le demi cercle
@@ -205,8 +239,8 @@ if __name__ == '__main__':
 
     caculate_solvant_accessibility(structure, input_file=pdb)
 
-    """mass_center = Point(3.19,37.1,36.2)
-    directions = find_points(10, mass_center)
+    mass_center = Point(3.19,37.1,36.2)
+    directions = find_points(1000, mass_center)
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter3D(mass_center.get_x(), mass_center.get_y(), mass_center.get_z(), color="red")
@@ -230,4 +264,7 @@ if __name__ == '__main__':
             plot_plane(plane1=plane,plane2 = plane2, point = Point(6.462 , 37.060 , 37.424))
         else:
             print("Vecteur directeur nul (z), pass --- ")
-        """
+        
+
+
+# TODO : Prendre le plus d'aa hits possible dans la tranche avec le meilleur ratio

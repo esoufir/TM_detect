@@ -2,10 +2,11 @@ import argparse
 from Bio.PDB import *
 import numpy as np
 import pymol
-
+import copy
 
 from AminoAcid import *  # je crois que c'est une mauvaise pratique mdr
 import Vector
+import sys
 
 
 class Protein:
@@ -14,6 +15,14 @@ class Protein:
         self.mass_center = Vector.Point(0, 0, 0)
         self.amino_acid_sequence = []
         self.best_positions = []
+        
+        self.x_max = 0
+        self.y_max = 0
+        self.z_max = 0
+
+        self.x_min = float('inf') # infini  
+        self.y_min = float('inf') 
+        self.z_min = float('inf') 
 
     def get_amino_acid_sequence(self):
         return self.amino_acid_sequence
@@ -35,7 +44,8 @@ class Protein:
         for axis in self.best_positions:
             if axis.best_number_hits > best_axis_val:
                 best_axis_val = axis.best_number_hits
-                best_axis = axis
+                best_axis = copy.deepcopy(axis)
+                print(axis)
         return best_axis
 
 
@@ -67,6 +77,22 @@ def caculate_solvant_accessibility(structure, input_file, protein):  # a voir po
         a_key = list(dssp.keys())[i]
         protein.get_amino_acid_sequence()[i].set_asa(dssp[a_key][3])  # pas sure pour i"""
 
+
+def find_limits(self):
+    for aa in self.amino_acid_sequence:
+        if aa.x > self.x_max :
+            self.x_max = aa.x
+        if aa.y > self.y_max :
+            self.y_max = aa.y
+        if aa.z > self.z_max :
+            self.z_max = aa.z
+        
+        if aa.x < self.x_min :
+            self.x_min = aa.x
+        if aa.y < self.y_min :
+            self.y_min = aa.y
+        if aa.z < self.z_min :
+            self.z_min = aa.z
 
 def parse_pdb(input_file):
     # TODO: Parse the PDB File to get only one chain (pour le moment, cf extension) and get residues and atoms and
@@ -100,6 +126,69 @@ def parse_pdb(input_file):
     return protein
 
 
+def show_in_pymol(plane1,plane2, pdb_file, point_x = None):
+    pymol.finish_launching()
+    pymol.cmd.load(pdb_file, "molecule_name")# adapty
+
+    # TODO : Adapt
+    x_min, x_max = -10, 10
+    y_min, y_max = -10, 10
+
+    # Define the step size for sampling points
+    step = 1
+
+    # Initialize an empty list to store the points
+    points_on_plane = []
+
+    # Generate points on the plane
+    for x in np.arange(x_min, x_max + step, step):
+        for y in np.arange(y_min, y_max + step, step):
+            # Calculate z coordinate using the plane equation
+            z = (-plane1.a * x - plane1.b * y - plane1.d) / plane1.c
+            points_on_plane.append((x, y, z))
+
+    for idx, point in enumerate(points_on_plane):
+        x, y, z = point
+        atom_name = f"dummy_{idx}"
+        pymol.cmd.pseudoatom(atom_name, pos=[x, y, z], color="yellow")
+        pymol.cmd.show("spheres", f"dummy_{idx}")
+
+    # Initialize an empty list to store the points
+    points_on_plane = []
+
+    # Generate points on the plane
+    for x in np.arange(x_min, x_max + step, step):
+        for y in np.arange(y_min, y_max + step, step):
+            # Calculate z coordinate using the plane equation
+            z = (-plane2.a * x - plane2.b * y - plane2.d) /plane2.c
+            points_on_plane.append((x, y, z))
+
+    for idx, point in enumerate(points_on_plane):
+        x, y, z = point
+        atom_name = f"dummy_{idx}"
+        pymol.cmd.pseudoatom(atom_name, pos=[x, y, z], color="yellow")
+        pymol.cmd.show("spheres", f"dummy_{idx}")
+    
+     # p : 
+    if point_x is not None:
+        atom_name = "p"
+        pymol.cmd.pseudoatom(atom_name, pos=[point_x.get_x(),point_x.get_y(),point_x.get_z()], color="blue")# TODO : Adapt
+        pymol.cmd.show("spheres",atom_name)
+
+    # Center of mass : 
+    atom_name = "center_mass"
+    pymol.cmd.pseudoatom(atom_name, pos=[3.19,37.1,36.2], color="magenta")# TODO : Adapt
+    pymol.cmd.show("spheres",atom_name)
+    
+    # Protein :        
+    pymol.cmd.show("cartoon", "molecule_name")
+
+    # Zoom to fit the view
+    #pymol.cmd.zoom()
+
+    # Save an image if needed
+    pymol.cmd.png("planes.png")
+
 # TODO :All the logging file https://docs.python.org/3/howto/logging.html
 
 if __name__ == '__main__':
@@ -115,114 +204,129 @@ if __name__ == '__main__':
 
     protein = parse_pdb(args.filename)
     # Number of points
-    n = 5
-    directions = Vector.find_points(n * 2, protein.mass_center)
+    n = 1000
+
+    directions = Vector.find_points(n, protein.mass_center)
     print("Calculating the planes... ")
     # For each direction...
     for d in directions:
-        point = d
+        point = copy.deepcopy(d)
         # Find the normal vector
-        normal = Vector.find_director_vector(point=d, center_coordinate=protein.mass_center)
+        normal = Vector.find_director_vector(point=point, center_coordinate=protein.mass_center)
         # Construction of the two planes representing the membrane : 
         plane1 = Vector.Plane(point=point, normal=normal)
         plane2 = plane1.complementary(14)  # 14 Angstrom, à voir pour la modularité TODO
-        best_axis_tmp = None
+
         axis = Vector.Axis(p1=plane1, p2=plane2)
+        best_axis_tmp =  copy.deepcopy(axis)
         # Looking above : 
-        
         while axis.explore_axe(protein.amino_acid_sequence) == True:
+            # Keeping in mind the best axis found yet : 
+            #print("TEST", axis.best_number_hits , best_axis_tmp.best_number_hits)
+            
+            if axis.best_number_hits > best_axis_tmp.best_number_hits : 
+                best_axis_tmp = copy.deepcopy(axis)
+                print("AXIS IMPROVED ABOVE")
+            
+            
+            #if best_axis_tmp.best_number_aa!=0 :
+                #print("BEST AXIS IS", best_axis_tmp)
+            
+          
+            # TODO: Function to "reinitialize the axis by sliding the plane + resetting to 0 the matches"
             # Sliding the planes if necessary
             axis.plane1.slide_plane(1)
             axis.plane2.slide_plane(1)  # adapte la gap je pense
-            res_explore = axis.explore_axe(protein.amino_acid_sequence)
-            if best_axis_tmp is None or axis.best_number_hits > best_axis_tmp.best_number_hits : 
-                best_axis_tmp = axis
-                print("AXIS IMPROVED ABOVE")
+            axis.best_number_hits = 0
+            axis.best_number_aa = 0
 
-        
-        # Keeping in mind the best axis found yet : 
-        # ???
-        print("BEST AXIS AFTER ABOVE EXPLORATION", best_axis_tmp)
+        #print("BEST AXIS AFTER ABOVE EXPLORATION", best_axis_tmp)
         # Resetting start positions
         plane1 = Vector.Plane(point=point, normal=normal)
         plane2 = plane1.complementary(14)  # 14 Angstrom, à voir pour la modularité TODO
         axis = Vector.Axis(p1=plane1, p2=plane2) # pas sure de si faut le remettre
 
-
-
         # Looking below :
         while axis.explore_axe(protein.amino_acid_sequence):
+            
+            if best_axis_tmp is None or axis.best_number_hits > best_axis_tmp.best_number_hits : 
+                best_axis_tmp = copy.deepcopy(axis)
+                print("AXIS IMPROVED BELOW")
             # Sliding the planes if necessary
             axis.plane1.slide_plane(-1)
             axis.plane2.slide_plane(-1)
-            if best_axis_tmp is None or axis.best_number_hits > best_axis_tmp.best_number_hits : 
-                best_axis_tmp = axis
-                print("AXIS IMPROVED BELOW")
+            axis.best_number_hits = 0
+            axis.best_number_aa = 0
+            
         
-        print("BEST AXIS AFTER below EXPLORATION", best_axis_tmp)
+        #print("BEST AXIS AFTER below EXPLORATION", best_axis_tmp)
 
         #print("BEST AXIS WAS :", best_axis_tmp)
-        # Saving the best poisiton for the axis
+        # Saving the best position for the axis
         protein.best_positions.append(best_axis_tmp)
-
-        # print(f"With this axis, {axis.best_number_hits} hits for {axis.best_number_aa} amino acids in-between, so a ratio of : {axis.best_number_hits/axis.best_number_aa}")
+        
 
     best_axis = protein.find_best_axis()
-    print("BEST AXIS OVERALL IS ", best_axis, "WITH PLANES = ", best_axis.plane1, best_axis.plane2)
-
-    plane1 = best_axis.plane1
-    plane2 = best_axis.plane2
-
+    print("BEST AXIS BEFORE ADJUSTING IS ", best_axis, "WITH PLANES = ", best_axis.plane1, best_axis.plane2)
     # TODO: Faire l'optimisation de la largeur de la membrane
-    pymol.finish_launching()
-    pymol.cmd.load(args.filename, "molecule_name")
 
-    # Create two dummy objects
-    # TODO : Adapt
-    x_min, x_max = -10, 10
-    y_min, y_max = -10, 10
+    print("OPTIMISING MEMBRANE WIDTH...")
+    # Adjusting the bottom plane of the best axis :
+    gap = 0.1
+    best_axis_tmp = copy.deepcopy(best_axis)
+    while best_axis.explore_axe_bis(protein.amino_acid_sequence): 
+            print("IN")
+            if  best_axis.best_ratio > best_axis_tmp.best_ratio : 
+                best_axis_tmp = copy.deepcopy(best_axis)
+                print("BEST AXIS IMPROVED BELOW")
+            # Sliding the planes if necessary
+            best_axis.plane2.slide_plane(-gap)
+            best_axis.best_number_hits = 0
+            best_axis.best_number_aa = 0
 
-    # Define the step size for sampling points
-    step = 2
+    # best_axis_tmp is the best yet
+    best_axis_tmp2 = copy.deepcopy(best_axis_tmp)
+    while best_axis_tmp.explore_axe_bis(protein.amino_acid_sequence): 
+            print("IN2")
+            if best_axis_tmp.best_ratio > best_axis_tmp.best_ratio : 
+                best_axis_tmp2 = copy.deepcopy(best_axis_tmp)
+                print("BEST AXIS IMPROVED ABOVE")
+            # Sliding the planes if necessary
+            best_axis_tmp.plane2.slide_plane(gap)
+            best_axis_tmp.best_number_hits = 0
+            best_axis_tmp.best_number_aa = 0
 
-    # Initialize an empty list to store the points
-    points_on_plane = []
+    # best_axis_tmp is the best yet
+    best_axis_tmp3 = copy.deepcopy(best_axis_tmp2)
+    while best_axis_tmp2.explore_axe_bis(protein.amino_acid_sequence): 
+            print("IN3")
+            if best_axis_tmp2.best_ratio > best_axis_tmp2.best_ratio : 
+                best_axis_tmp3 = copy.deepcopy(best_axis_tmp2)
+                print("BEST AXIS IMPROVED below")
+            # Sliding the planes if necessary
+            best_axis_tmp2.plane1.slide_plane(-gap)
+            best_axis_tmp2.best_number_hits = 0
+            best_axis_tmp2.best_number_aa = 0
+    
+     # best_axis_tmp is the best yet
+    best_axis_tmp4 = copy.deepcopy(best_axis_tmp3)
+    while best_axis_tmp2.explore_axe_bis(protein.amino_acid_sequence): 
+            print("IN4")
+            if best_axis_tmp3.best_ratio > best_axis_tmp3.best_ratio : 
+                best_axis_tmp4 = copy.deepcopy(best_axis_tmp3)
+                print("BEST AXIS IMPROVED below")
+            # Sliding the planes if necessary
+            best_axis_tmp3.plane1.slide_plane(gap)
+            best_axis_tmp3.best_number_hits = 0
+            best_axis_tmp3.best_number_aa = 0
+    # At the end, the best axis with the good planes positions is in best_axis_tmp2
+    #print("BEST AXIS OVERALL IS ", best_axis_tmp2, "WITH PLANES = ", best_axis.plane1, best_axis.plane2)
 
-    # Generate points on the plane
-    for ax in protein.best_positions:
-        for x in np.arange(x_min, x_max + step, step):
-            for y in np.arange(y_min, y_max + step, step):
-                # Calculate z coordinate using the plane equation
-                z = (-ax.plane1.a * x - ax.plane1.b * y - ax.plane1.d) / ax.plane1.c
-                points_on_plane.append((x, y, z))
+    # A mettre à la toute fin : 
+    show_in_pymol(best_axis_tmp4.plane1,best_axis_tmp4.plane2, args.filename)    
 
-    for idx, point in enumerate(points_on_plane):
-        x, y, z = point
-        atom_name = f"dummy_{idx}"
-        pymol.cmd.pseudoatom(atom_name, pos=[x, y, z], color="red")
-        pymol.cmd.show("spheres", f"dummy_{idx}")
+  
 
-    # Initialize an empty list to store the points
-    points_on_plane = []
-
-    # Generate points on the plane
-    for ax in protein.best_positions:
-        for x in np.arange(x_min, x_max + step, step):
-            for y in np.arange(y_min, y_max + step, step):
-                # Calculate z coordinate using the plane equation
-                z = (-ax.plane2.a * x - ax.plane2.b * y - ax.plane2.d) / ax.plane2.c
-                points_on_plane.append((x, y, z))
-
-    for idx, point in enumerate(points_on_plane):
-        x, y, z = point
-        atom_name = f"dummy_{idx}"
-        pymol.cmd.pseudoatom(atom_name, pos=[x, y, z], color="red")
-        pymol.cmd.show("spheres", f"dummy_{idx}")
-    # Protein :        
-    pymol.cmd.show("cartoon", "molecule_name")
-
-    # Zoom to fit the view
-    pymol.cmd.zoom()
-
-    # Save an image if needed
-    pymol.cmd.png("planes.png")
+    
+    
+    
