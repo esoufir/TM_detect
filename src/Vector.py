@@ -60,7 +60,7 @@ class Plane:
         self.d = -(self.a * self.point.get_x() + self.b * self.point.get_y() + self.c * self.point.get_z())  # https://mathworld.wolfram.com/Plane.html
 
     def __str__(self):
-        return f"Plane equation is : {self.a}x + {self.b}y +{self.c}z + {self.d} = 0\n"
+        return f"{self.a:.3f}x + {self.b:.3f}y +{self.c:.3f}z + {self.d:.3f} = 0\n"
 
     def complementary(self, gap):
         # gap in Angstrom
@@ -85,6 +85,12 @@ class Plane:
         return True if (
                                    self.a * point.get_x() + self.b * point.get_y() + self.c * point.get_z() + self.d) < 0 else False
 
+
+    def is_in(self,point):
+        # Return Tru if point is in the plane self
+        print("IS IN VAL", self.a * point.get_x() +self.b * point.get_y() + self.c * point.get_z() + self.d)
+        return True if self.a * point.get_x() +self.b * point.get_y() + self.c * point.get_z() + self.d == 0  else False
+
 # TODO : Error handling
 class Axis:
     def __init__(self, p1, p2):
@@ -101,22 +107,16 @@ class Axis:
     #TODO : Potenetiellemnt à mettre dans Protéine:
 
     
-
-
-    def explore_axe(self, amino_acid_sequence):
-        # TODO: Quand la tranche qu'on regarde ne contient aucun Calpha => BREAk Je crois que c'est ce qui est fait
-        #  vu qu'on retourne faux des qu'on a que des trucs qui correspondent pas : a voir ce qui se passe si on
-        #  tombe sur des truca mauvais de base
+    def explore_axe(self, amino_acid_sequence, ref): #axis de ref avec les meilleurs métriques obtenues
         in_between_planes = []
         number_atoms_in_between = 0 # en vrai sert à rien vu que c'est len de in_between_planes. 
         number_atoms_hits = 0
-        # Getting only the amino acids located between the two planes :
         for aa in (amino_acid_sequence):
-            if (self.plane1.is_below(aa.point) and self.plane2.is_above(aa.point)) or self.plane2.is_below(
-                    aa.point) and self.plane1.is_above(aa.point):
+            if (self.plane1.is_below(aa.point) and self.plane2.is_above(aa.point)) or (self.plane2.is_below(
+                    aa.point) and self.plane1.is_above(aa.point)):
                 number_atoms_in_between += 1
                 in_between_planes.append(aa)
-        
+
         number_atoms_in_between = len(in_between_planes)
 
         # When no more atoms between the two planes, exiting the function, we stop the exploring on this side of the axis
@@ -125,31 +125,39 @@ class Axis:
             return (False)
         
         # Computing the relative hydrophobicity of the selected amino_acids : to maximise
-        hydrophobicity = compute_relative_hydrophobicity(in_between_planes)
+        hydrophobicity, n_hits, n_total = compute_relative_hydrophobicity(in_between_planes)
 
         #print(f"Hit ratio {number_atoms_hits} \t {number_atoms_in_between} = {number_atoms_hits/number_atoms_in_between}")
-        if  hydrophobicity > self.best_hydrophobicity:
-            # Updating the "best" match
-            #self.best_number_hits = number_atoms_hits
-            #self.best_number_aa = number_atoms_in_between
-            print("HYDROPHOBICITY xas",self.best_hydrophobicity)
+        # TODO : améliorer hydrophobicité seulement si le nombre de résidus hydrophobes et le total sont plus grand qu'avant ???
 
-            self.best_hydrophobicity = hydrophobicity
-            print("HYDROPHOBICITY IMPROVEd to",self.best_hydrophobicity)
+        if  hydrophobicity > ref.best_hydrophobicity and n_hits > ref.best_number_hits and n_total > ref.best_number_aa:
+            # Updating the "best" match
+            """print("NHITS was", ref.best_number_hits)
+            print("N_tot was", ref.best_number_aa)
+            print("HYDROPHOBICITY was",ref.best_hydrophobicity)"""
+            # COPIE GENERALE ?
+            ref.best_number_hits = n_hits
+            ref.best_number_aa = n_total
+            ref.best_hydrophobicity = hydrophobicity
+            ref.plane1 = copy.deepcopy(self.plane1)
+            ref.plane2 = copy.deepcopy(self.plane2)
+
+            """print("NHITS is", ref.best_number_hits)
+            print("N_tot is", ref.best_number_aa)
+            print("HYDROPHOBICITY is",ref.best_hydrophobicity)"""
         return (True) if len(in_between_planes) > 0 else (False)
 
 
-    def explore_axe_bis(self, amino_acid_sequence):
+    def explore_axe_bis(self, amino_acid_sequence,ref):
         in_between_planes = []
-        # Otpmizing membrane width = maximize ratio
-        number_atoms_in_between = 0 # a voir
-        # Getting only the amino acids located between the two planes :
+        number_atoms_in_between = 0 # en vrai sert à rien vu que c'est len de in_between_planes. 
+        number_atoms_hits = 0
         for aa in (amino_acid_sequence):
-            if (self.plane1.is_below(aa.point) and self.plane2.is_above(aa.point)) or self.plane2.is_below(
-                    aa.point) and self.plane1.is_above(aa.point):
-                number_atoms_in_between += 1 # a voir
+            if (self.plane1.is_below(aa.point) and self.plane2.is_above(aa.point)) or (self.plane2.is_below(
+                    aa.point) and self.plane1.is_above(aa.point)):
+                number_atoms_in_between += 1
                 in_between_planes.append(aa)
-        
+
         number_atoms_in_between = len(in_between_planes)
 
         # When no more atoms between the two planes, exiting the function, we stop the exploring on this side of the axis
@@ -158,25 +166,39 @@ class Axis:
             return (False)
         
         # Computing the relative hydrophobicity of the selected amino_acids : to maximise
-        hydrophobicity = compute_relative_hydrophobicity(in_between_planes)
+        hydrophobicity, n_hits, n_total = compute_relative_hydrophobicity(in_between_planes)
+        # TODO : améliorer hydrophobicité seulement si le nombre de résidus hydrophobes et le total sont plus grand qu'avant ???
+        print("NHITS was", ref.best_number_hits)
+        print("N_tot was", ref.best_number_aa)
+        print("HYDROPHOBICITY was",ref.best_hydrophobicity)        
 
-        if  hydrophobicity > self.best_hydrophobicity:
+
+        if  hydrophobicity > ref.best_hydrophobicity and n_hits > ref.best_number_hits and n_total > ref.best_number_aa:
             # Updating the "best" match
-            #self.best_number_hits = number_atoms_hits
-            #self.best_number_aa = number_atoms_in_between
-            print("HYDROPHOBICITY xas",self.best_hydrophobicity)
-            self.best_hydrophobicity = hydrophobicity
-            print("HYDROPHOBICITY IMPROVEd to",self.best_hydrophobicity)
+            """print("NHITS was", ref.best_number_hits)
+            print("N_tot was", ref.best_number_aa)
+            print("HYDROPHOBICITY was",ref.best_hydrophobicity)"""
+            # COPIE GENERALE ?
+            ref.best_number_hits = n_hits
+            ref.best_number_aa = n_total
+            ref.best_hydrophobicity = hydrophobicity
+            ref.plane1 = copy.deepcopy(self.plane1)
+            ref.plane2 = copy.deepcopy(self.plane2)
+
+            """print("NHITS is", ref.best_number_hits)
+            print("N_tot is", ref.best_number_aa)
+            print("HYDROPHOBICITY is",ref.best_hydrophobicity)"""
         else:
             # If its not better
             return False
 
-
 def compute_relative_hydrophobicity(amino_acid_sequence):
     relative_hydrophobicity = 0
+
     for aa in amino_acid_sequence:
         relative_hydrophobicity += aa.hydrophobicity
-    return relative_hydrophobicity
+    # Number of hits and number of atoms must be significant important #TODO > 10 ? pour éviter les 1/1 ratios
+    return (relative_hydrophobicity/len(amino_acid_sequence), relative_hydrophobicity, len(amino_acid_sequence))
 
 
 def plot_plane(plane1, plane2=None, point=None):
@@ -263,7 +285,7 @@ if __name__ == '__main__':
     caculate_solvant_accessibility(structure, input_file=pdb)
 
     mass_center = Point(3.19,37.1,36.2)
-    directions = find_points(3, mass_center)
+    directions = find_points(20, mass_center)
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter3D(mass_center.get_x(), mass_center.get_y(), mass_center.get_z(), color="red")

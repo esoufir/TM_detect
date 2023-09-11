@@ -12,7 +12,7 @@ class AminoAcid:
             if code in AminoAcid.hydrophobics_amino_acids:
                 self.hydrophobicity = 1
             else :
-                self.hydrophobicity = -1 
+                self.hydrophobicity = 0 # ou -1 ? 
             self.atoms_list = []
             self.asa = 0
             self.point = Vector.Point(x,y,z)
