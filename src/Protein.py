@@ -233,7 +233,7 @@ if __name__ == '__main__':
 
     protein = parse_pdb(args.filename)
     # Number of points
-    n = 10
+    n = 15
 
     directions = Vector.find_points(n, protein.mass_center)
     print("Calculating the planes... ")
@@ -264,8 +264,6 @@ if __name__ == '__main__':
         
         print("BEST AXIS AFTER ABOVE EXPLORATION", best_axis_tmp)
         
-        
-
         # Resetting start positions
         plane1 = Vector.Plane(point=point, normal=normal)
         plane2 = plane1.complementary(14)  # 14 Angstrom, à voir pour la modularité TODO
@@ -302,62 +300,54 @@ if __name__ == '__main__':
     gap = 1
     # Keeping in mynid what was the best axis with the best planes yet :
     best_axis_tmp = copy.deepcopy(best_axis)
-
-    best_axis.plane2.slide_plane(-gap) 
-    print("WIDTH IS NOW", abs(best_axis.plane1.d - best_axis.plane2.d))
+    best_axis.plane2.slide_plane(gap) 
     
     while best_axis.explore_axe_bis(protein.amino_acid_sequence, ref =best_axis_tmp ): 
             print("IN",best_axis.best_ratio, best_axis_tmp.best_ratio)
-            """if  best_axis.best_ratio > best_axis_tmp.best_ratio : 
-                best_axis_tmp = copy.deepcopy(best_axis)
-                print("BEST AXIS IMPROVED BELOW")"""
             # Sliding the planes if necessary
-            best_axis.plane2.slide_plane(-gap)
+            best_axis.plane2.slide_plane(gap)
            
     print("WIDTH 1 IS", abs(best_axis_tmp.plane1.d - best_axis_tmp.plane2.d))
    
     # best_axis_tmp is the best yet
     best_axis_tmp2 = copy.deepcopy(best_axis_tmp)
-    best_axis_tmp.plane2.slide_plane(gap)
+    best_axis_tmp.plane2.slide_plane(-gap)
     while best_axis_tmp.explore_axe_bis(protein.amino_acid_sequence, ref =best_axis_tmp2 ): 
             print("IN2")
             """if best_axis_tmp.best_ratio > best_axis_tmp.best_ratio : 
                 best_axis_tmp2 = copy.deepcopy(best_axis_tmp)"""
                 #print("BEST AXIS IMPROVED ABOVE")
             # Sliding the planes if necessary
-            best_axis_tmp.plane2.slide_plane(gap)
+            best_axis_tmp.plane2.slide_plane(-gap)
             
     print("WIDTH 2 IS", abs(best_axis_tmp2.plane1.d - best_axis_tmp2.plane2.d))
-
+        
     # best_axis_tmp is the best yet
     best_axis_tmp3 = copy.deepcopy(best_axis_tmp2)
     best_axis_tmp2.plane1.slide_plane(-gap)
     while best_axis_tmp2.explore_axe_bis(protein.amino_acid_sequence, ref =best_axis_tmp3 ): 
             print("IN3")
-            """if best_axis_tmp2.best_ratio > best_axis_tmp2.best_ratio : 
-                best_axis_tmp3 = copy.deepcopy(best_axis_tmp2)"""
+           
                 #print("BEST AXIS IMPROVED below")
             # Sliding the planes if necessary
             best_axis_tmp2.plane1.slide_plane(-gap)
             
     print("WIDTH 3 IS", abs(best_axis_tmp3.plane1.d - best_axis_tmp3.plane2.d))
-     # best_axis_tmp is the best yet
+    
+      # best_axis_tmp is the best yet
     best_axis_tmp4 = copy.deepcopy(best_axis_tmp3)
     best_axis_tmp3.plane1.slide_plane(gap)
-    while best_axis_tmp2.explore_axe_bis(protein.amino_acid_sequence, ref =best_axis_tmp4 ): 
+    while best_axis_tmp3.explore_axe_bis(protein.amino_acid_sequence, ref =best_axis_tmp4 ): 
             print("IN4")
-            """if best_axis_tmp3.best_ratio > best_axis_tmp3.best_ratio : 
-                best_axis_tmp4 = copy.deepcopy(best_axis_tmp3)"""
-                #print("BEST AXIS IMPROVED below")
             # Sliding the planes if necessary
             best_axis_tmp3.plane1.slide_plane(gap)
            
     # At the end, the best axis with the good planes positions is in best_axis_tmp2
     #print("BEST AXIS OVERALL IS ", best_axis_tmp2, "WITH PLANES = ", best_axis.plane1, best_axis.plane2)
     print("WIDTH IS", abs(best_axis_tmp4.plane1.d - best_axis_tmp4.plane2.d))
-    best_axis_tmp4.plane1.d = best_axis_tmp4.plane2.d + 20
-    # A mettre à la toute fin : 
-    show_in_pymol(best_axis_tmp4.plane1,best_axis_tmp4.plane2, args.filename, mass_center=protein.mass_center)    
+    show_in_pymol(best_axis_tmp4.plane1,best_axis_tmp4.plane2, args.filename, mass_center=protein.mass_center)
+    # A mettre à la toute fin : """
+    #show_in_pymol(best_axis_tmp4.plane1,best_axis_tmp4.plane2, args.filename, mass_center=protein.mass_center)    
 
   
 

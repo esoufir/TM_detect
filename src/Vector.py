@@ -151,7 +151,6 @@ class Axis:
     def explore_axe_bis(self, amino_acid_sequence,ref):
         in_between_planes = []
         number_atoms_in_between = 0 # en vrai sert à rien vu que c'est len de in_between_planes. 
-        number_atoms_hits = 0
         for aa in (amino_acid_sequence):
             if (self.plane1.is_below(aa.point) and self.plane2.is_above(aa.point)) or (self.plane2.is_below(
                     aa.point) and self.plane1.is_above(aa.point)):
@@ -159,7 +158,7 @@ class Axis:
                 in_between_planes.append(aa)
 
         number_atoms_in_between = len(in_between_planes)
-
+        print("NB ATOMS CONSIDERED", number_atoms_in_between)
         # When no more atoms between the two planes, exiting the function, we stop the exploring on this side of the axis
         if number_atoms_in_between == 0:
             print("No more atoms in between")
@@ -170,20 +169,23 @@ class Axis:
         # TODO : améliorer hydrophobicité seulement si le nombre de résidus hydrophobes et le total sont plus grand qu'avant ???
         print("NHITS was", ref.best_number_hits)
         print("N_tot was", ref.best_number_aa)
-        print("HYDROPHOBICITY was",ref.best_hydrophobicity)        
-
-
-        if  hydrophobicity > ref.best_hydrophobicity and n_hits > ref.best_number_hits and n_total > ref.best_number_aa:
+        print("HYDROPHOBICITY was",hydrophobicity)     
+        print("NHITS REF",n_hits)
+        print("N_tot REF", n_total)
+        print("HYDROPHOBICITY REF",ref.best_hydrophobicity)      
+        if  hydrophobicity > ref.best_hydrophobicity and number_atoms_in_between > ref.best_number_aa:
             # Updating the "best" match
             """print("NHITS was", ref.best_number_hits)
             print("N_tot was", ref.best_number_aa)
             print("HYDROPHOBICITY was",ref.best_hydrophobicity)"""
-            # COPIE GENERALE ?
+            print("UPGRADE PLANE REF")
             ref.best_number_hits = n_hits
             ref.best_number_aa = n_total
             ref.best_hydrophobicity = hydrophobicity
             ref.plane1 = copy.deepcopy(self.plane1)
             ref.plane2 = copy.deepcopy(self.plane2)
+
+            return True
 
             """print("NHITS is", ref.best_number_hits)
             print("N_tot is", ref.best_number_aa)
@@ -191,6 +193,7 @@ class Axis:
         else:
             # If its not better
             return False
+        return True
 
 def compute_relative_hydrophobicity(amino_acid_sequence):
     relative_hydrophobicity = 0
@@ -201,7 +204,7 @@ def compute_relative_hydrophobicity(amino_acid_sequence):
     return (relative_hydrophobicity/len(amino_acid_sequence), relative_hydrophobicity, len(amino_acid_sequence))
 
 
-def plot_plane(plane1, plane2=None, point=None):
+"""def plot_plane(plane1, plane2=None, point=None):
     X, Z = np.meshgrid(range(100), range(100))
     # Calculate the corresponding y values for the plane
     # mouais, plutot faire en sorte quil ne soit jamais 0
@@ -219,7 +222,7 @@ def plot_plane(plane1, plane2=None, point=None):
     if plane2 is not None and plane2.d != 0:
         Y2 = (-plane2.a * X - plane2.c * Z - plane2.d) / plane2.b
         ax.plot_surface(X, Y2, Z, color='red', alpha=0.2)
-    plt.show()
+    plt.show()"""
 
 
 # TODO: faire que le demi cercle
@@ -257,7 +260,6 @@ def find_normal_plan(director_vector):
 def caculate_solvant_accessibility(structure, input_file):  # a voir pour identifier le bon aa
     # Using DSSP
     print("Computing solvant accessibility...")
-
     model = structure[0]
     dssp = DSSP(model, input_file)
     # Store ASA values for each residue
@@ -275,7 +277,7 @@ def caculate_solvant_accessibility(structure, input_file):  # a voir pour identi
     return asa_values
 
 
-if __name__ == '__main__':
+"""if __name__ == '__main__':
     # Plot points check
     pdb = "../data/1prn.pdb"
     p = PDBParser()
@@ -312,4 +314,4 @@ if __name__ == '__main__':
         
 
 
-# TODO : Prendre le plus d'aa hits possible dans la tranche avec le meilleur ratio
+# TODO : Prendre le plus d'aa hits possible dans la tranche avec le meilleur ratio"""
