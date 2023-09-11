@@ -42,8 +42,8 @@ class Protein:
         best_axis_val = 0
         best_axis = None
         for axis in self.best_positions:
-            if axis.best_number_hits > best_axis_val:
-                best_axis_val = axis.best_number_hits
+            if axis.best_hydrophobicity > best_axis_val:
+                best_axis_val = axis.best_hydrophobicity
                 best_axis = copy.deepcopy(axis)
                 print(axis)
         return best_axis
@@ -67,19 +67,17 @@ def check_input_file(input_file):
         header_dict = parse_pdb_header(handle)
 
 
-def caculate_solvant_accessibility(structure, input_file, protein):  # a voir pour identifier le bon aa
+def caculate_solvant_accessibility(structure, input_file):
     # Using DSSP
     print("Computing solvant accessibility...")
     model = structure[0]
     dssp = DSSP(model, input_file, dssp='mkdssp')
     # Pour chaque acide aminé, on a ASA = Accessible Surface Area
-    for i in range(len(dssp.keys())):
-        a_key = list(dssp.keys())[i]
-        protein.get_amino_acid_sequence()[i].set_asa(dssp[a_key][3])  # pas sure pour i"""
+    return dssp
 
 
-def find_limits(self):
-    for aa in self.amino_acid_sequence:
+def find_limits(self): # TODO : ca sert ? 
+    for aa in self.amino_< acid_sequence:
         if aa.x > self.x_max :
             self.x_max = aa.x
         if aa.y > self.y_max :
@@ -104,6 +102,16 @@ def parse_pdb(input_file):
     # TODO :mieux subdiviser en fonctions
     id_amino_acid = 1
     protein = Protein(name=input_file[8:-4])
+    
+    
+    # Compute the the solvant accessibility and set it for each amino acid of the protein 
+    dssp_res = caculate_solvant_accessibility(structure, input_file=input_file)
+    selected_residues = []
+    for res_id, aa, ss, asa, phi, psi, sasa, area, _,_,_,_,_,_ in dssp_res:
+        if asa > 0.3: # TODO : Adapt
+            selected_residues.append(res_id)
+
+    
     # Adapt with the condition of the exercise : 
     for model in structure:
         print(f"Found {len(model)} chains in structure...")
@@ -112,17 +120,15 @@ def parse_pdb(input_file):
             protein.mass_center = Vector.Point(xm, ym, zm)
             for residue in chain:
                 # Getting the C-alpha
-                if residue.has_id("CA"):
-                    atom = residue['CA']
-                    x, y, z = atom.get_coord()
-                    # Creating and setting the AminoAcid object
-                    new_amino_acid = AminoAcid(code=residue.get_resname(), id=id_amino_acid, x=x, y=y, z=z)
-                    # Linking the amino acid to its protein object
-                    protein.add_to_amino_acid_sequence(new_amino_acid=new_amino_acid)
-                    id_amino_acid += 1
-    # Compute the the solvant accessibility and set it for each amino acid of the protein 
-    # TODO: Ne garder que les résidus accessibles au solvant, donc ne créer que ces objets
-    caculate_solvant_accessibility(structure, input_file=input_file, protein=protein)
+                if residue.get_id()[1] in selected_residues:
+                    if residue.has_id("CA"):
+                        atom = residue['CA']
+                        x, y, z = atom.get_coord()
+                        # Creating and setting the AminoAcid object
+                        new_amino_acid = AminoAcid(code=residue.get_resname(), id=id_amino_acid, x=x, y=y, z=z)
+                        # Linking the amino acid to its protein object
+                        protein.add_to_amino_acid_sequence(new_amino_acid=new_amino_acid)
+                        id_amino_acid += 1    
     return protein
 
 
@@ -204,11 +210,12 @@ if __name__ == '__main__':
 
     protein = parse_pdb(args.filename)
     # Number of points
-    n = 1000
+    n = 20
 
     directions = Vector.find_points(n, protein.mass_center)
     print("Calculating the planes... ")
     # For each direction...
+    # directions.reverse() TODO: a voir vu que le dernier point placé est le sommet (spirale)
     for d in directions:
         point = copy.deepcopy(d)
         # Find the normal vector
@@ -224,23 +231,26 @@ if __name__ == '__main__':
             # Keeping in mind the best axis found yet : 
             #print("TEST", axis.best_number_hits , best_axis_tmp.best_number_hits)
             
-            if axis.best_number_hits > best_axis_tmp.best_number_hits : 
+            if axis.best_hydrophobicity > best_axis_tmp.best_hydrophobicity : 
                 best_axis_tmp = copy.deepcopy(axis)
-                print("AXIS IMPROVED ABOVE")
+                #print("AXIS IMPROVED ABOVE")
             
             
             #if best_axis_tmp.best_number_aa!=0 :
                 #print("BEST AXIS IS", best_axis_tmp)
-            
-          
+        
+        
             # TODO: Function to "reinitialize the axis by sliding the plane + resetting to 0 the matches"
             # Sliding the planes if necessary
             axis.plane1.slide_plane(1)
             axis.plane2.slide_plane(1)  # adapte la gap je pense
-            axis.best_number_hits = 0
-            axis.best_number_aa = 0
-
+            axis.best_number_hits = 0 # TODO mouais
+            axis.best_number_aa = 0 # TODO : mouais
+        
         #print("BEST AXIS AFTER ABOVE EXPLORATION", best_axis_tmp)
+        #show_in_pymol(best_axis_tmp.plane1,best_axis_tmp.plane2, args.filename, point_x=point)    
+        
+
         # Resetting start positions
         plane1 = Vector.Plane(point=point, normal=normal)
         plane2 = plane1.complementary(14)  # 14 Angstrom, à voir pour la modularité TODO
@@ -249,40 +259,42 @@ if __name__ == '__main__':
         # Looking below :
         while axis.explore_axe(protein.amino_acid_sequence):
             
-            if best_axis_tmp is None or axis.best_number_hits > best_axis_tmp.best_number_hits : 
+            if axis.best_hydrophobicity > best_axis_tmp.best_hydrophobicity  : 
                 best_axis_tmp = copy.deepcopy(axis)
-                print("AXIS IMPROVED BELOW")
+                #print("AXIS IMPROVED BELOW")
             # Sliding the planes if necessary
             axis.plane1.slide_plane(-1)
             axis.plane2.slide_plane(-1)
-            axis.best_number_hits = 0
-            axis.best_number_aa = 0
+            axis.best_number_hits = 0 # TODO mouais
+            axis.best_number_aa = 0 # TODO mouais
             
         
         #print("BEST AXIS AFTER below EXPLORATION", best_axis_tmp)
-
-        #print("BEST AXIS WAS :", best_axis_tmp)
+        
         # Saving the best position for the axis
         protein.best_positions.append(best_axis_tmp)
-        
+
+    
 
     best_axis = protein.find_best_axis()
-    print("BEST AXIS BEFORE ADJUSTING IS ", best_axis, "WITH PLANES = ", best_axis.plane1, best_axis.plane2)
+    print("BEST AXIS BEFORE ADJUSTING IS ", best_axis, "WITH PLANES = ", best_axis.plane1, best_axis.plane2)    
+    
     # TODO: Faire l'optimisation de la largeur de la membrane
 
     print("OPTIMISING MEMBRANE WIDTH...")
+    print("WIDTH WAS", abs(best_axis.plane1.d - best_axis.plane2.d))
     # Adjusting the bottom plane of the best axis :
     gap = 0.1
     best_axis_tmp = copy.deepcopy(best_axis)
+    best_axis.plane2.slide_plane(-gap)
     while best_axis.explore_axe_bis(protein.amino_acid_sequence): 
-            print("IN")
+            print("IN",best_axis.best_ratio, best_axis_tmp.best_ratio)
             if  best_axis.best_ratio > best_axis_tmp.best_ratio : 
                 best_axis_tmp = copy.deepcopy(best_axis)
                 print("BEST AXIS IMPROVED BELOW")
             # Sliding the planes if necessary
             best_axis.plane2.slide_plane(-gap)
-            best_axis.best_number_hits = 0
-            best_axis.best_number_aa = 0
+           
 
     # best_axis_tmp is the best yet
     best_axis_tmp2 = copy.deepcopy(best_axis_tmp)
@@ -290,11 +302,10 @@ if __name__ == '__main__':
             print("IN2")
             if best_axis_tmp.best_ratio > best_axis_tmp.best_ratio : 
                 best_axis_tmp2 = copy.deepcopy(best_axis_tmp)
-                print("BEST AXIS IMPROVED ABOVE")
+                #print("BEST AXIS IMPROVED ABOVE")
             # Sliding the planes if necessary
             best_axis_tmp.plane2.slide_plane(gap)
-            best_axis_tmp.best_number_hits = 0
-            best_axis_tmp.best_number_aa = 0
+            
 
     # best_axis_tmp is the best yet
     best_axis_tmp3 = copy.deepcopy(best_axis_tmp2)
@@ -302,11 +313,10 @@ if __name__ == '__main__':
             print("IN3")
             if best_axis_tmp2.best_ratio > best_axis_tmp2.best_ratio : 
                 best_axis_tmp3 = copy.deepcopy(best_axis_tmp2)
-                print("BEST AXIS IMPROVED below")
+                #print("BEST AXIS IMPROVED below")
             # Sliding the planes if necessary
             best_axis_tmp2.plane1.slide_plane(-gap)
-            best_axis_tmp2.best_number_hits = 0
-            best_axis_tmp2.best_number_aa = 0
+            
     
      # best_axis_tmp is the best yet
     best_axis_tmp4 = copy.deepcopy(best_axis_tmp3)
@@ -314,16 +324,16 @@ if __name__ == '__main__':
             print("IN4")
             if best_axis_tmp3.best_ratio > best_axis_tmp3.best_ratio : 
                 best_axis_tmp4 = copy.deepcopy(best_axis_tmp3)
-                print("BEST AXIS IMPROVED below")
+                #print("BEST AXIS IMPROVED below")
             # Sliding the planes if necessary
             best_axis_tmp3.plane1.slide_plane(gap)
-            best_axis_tmp3.best_number_hits = 0
-            best_axis_tmp3.best_number_aa = 0
+           
     # At the end, the best axis with the good planes positions is in best_axis_tmp2
     #print("BEST AXIS OVERALL IS ", best_axis_tmp2, "WITH PLANES = ", best_axis.plane1, best_axis.plane2)
+    print("WIDTH IS", abs(best_axis_tmp4.plane1.d - best_axis_tmp4.plane2.d))
 
     # A mettre à la toute fin : 
-    show_in_pymol(best_axis_tmp4.plane1,best_axis_tmp4.plane2, args.filename)    
+    # show_in_pymol(best_axis_tmp4.plane1,best_axis_tmp4.plane2, args.filename)    
 
   
 

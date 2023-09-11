@@ -7,10 +7,12 @@ class AminoAcid:
         def __init__(self, code, id,x,y,z):
             self.id = id
             self.code = code
-            self.is_hydrophobic = False
+            self.hydrophobicity  = 0
             # molecule .... ? Avec quelle structure de données la représenter
             if code in AminoAcid.hydrophobics_amino_acids:
-                self.is_hydrophobic = True
+                self.hydrophobicity = 1
+            else :
+                self.hydrophobicity = -1 
             self.atoms_list = []
             self.asa = 0
             self.point = Vector.Point(x,y,z)
@@ -19,7 +21,6 @@ class AminoAcid:
             print("Amino Acid id", self.id)
             print("Amino Acid code", self.code)
             print("Amino Acid asa", self.asa)
-            print("Amino Acid is_hydrophobic", self.is_hydrophobic)
 
         def get_code(self):
             return(self.code)

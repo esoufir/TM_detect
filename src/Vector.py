@@ -93,67 +93,90 @@ class Axis:
         self.best_number_hits = 0
         self.best_number_aa = 0
         self.best_ratio = 0
+        self.best_hydrophobicity = -1000 #TODO: moauis
 
     def __str__(self):
-        return f"AXIS with best nb hits has {(self.best_number_hits/self.best_number_aa)*100:.3f}% {self.plane1}"
+        return f"AXIS with best hydro : {self.best_hydrophobicity}, {self.plane1}, {self.plane2}"
+
+    #TODO : Potenetiellemnt à mettre dans Protéine:
+
+    
+
 
     def explore_axe(self, amino_acid_sequence):
         # TODO: Quand la tranche qu'on regarde ne contient aucun Calpha => BREAk Je crois que c'est ce qui est fait
         #  vu qu'on retourne faux des qu'on a que des trucs qui correspondent pas : a voir ce qui se passe si on
         #  tombe sur des truca mauvais de base
         in_between_planes = []
-        number_atoms_in_between = 0
+        number_atoms_in_between = 0 # en vrai sert à rien vu que c'est len de in_between_planes. 
         number_atoms_hits = 0
+        # Getting only the amino acids located between the two planes :
         for aa in (amino_acid_sequence):
             if (self.plane1.is_below(aa.point) and self.plane2.is_above(aa.point)) or self.plane2.is_below(
                     aa.point) and self.plane1.is_above(aa.point):
                 number_atoms_in_between += 1
-                # If the amino acid is hydrophobic and exposed, then it's a hit
-                if aa.asa > 0.30 and aa.is_hydrophobic == True:
-                    in_between_planes.append(aa.id)
-                    number_atoms_hits += 1
-                    # print("ca is under plane a and is over p2", aa)
+                in_between_planes.append(aa)
+        
+        number_atoms_in_between = len(in_between_planes)
+
+        # When no more atoms between the two planes, exiting the function, we stop the exploring on this side of the axis
         if number_atoms_in_between == 0:
             print("No more atoms in between")
             return (False)
+        
+        # Computing the relative hydrophobicity of the selected amino_acids : to maximise
+        hydrophobicity = compute_relative_hydrophobicity(in_between_planes)
 
         #print(f"Hit ratio {number_atoms_hits} \t {number_atoms_in_between} = {number_atoms_hits/number_atoms_in_between}")
-        if  number_atoms_hits > self.best_number_hits:
+        if  hydrophobicity > self.best_hydrophobicity:
             # Updating the "best" match
-            self.best_number_hits = number_atoms_hits
-            self.best_number_aa = number_atoms_in_between
+            #self.best_number_hits = number_atoms_hits
+            #self.best_number_aa = number_atoms_in_between
+            print("HYDROPHOBICITY xas",self.best_hydrophobicity)
+
+            self.best_hydrophobicity = hydrophobicity
+            print("HYDROPHOBICITY IMPROVEd to",self.best_hydrophobicity)
         return (True) if len(in_between_planes) > 0 else (False)
 
 
     def explore_axe_bis(self, amino_acid_sequence):
-        # Otpmizing membrane width = maximize ratio
         in_between_planes = []
-        number_atoms_in_between = 0
-        number_atoms_hits = 0
-        
+        # Otpmizing membrane width = maximize ratio
+        number_atoms_in_between = 0 # a voir
+        # Getting only the amino acids located between the two planes :
         for aa in (amino_acid_sequence):
             if (self.plane1.is_below(aa.point) and self.plane2.is_above(aa.point)) or self.plane2.is_below(
                     aa.point) and self.plane1.is_above(aa.point):
-                number_atoms_in_between += 1
-                # If the amino acid is hydrophobic and exposed, then it's a hit
-                if aa.asa > 0.30 and aa.is_hydrophobic == True:
-                    in_between_planes.append(aa.id)
-                    number_atoms_hits += 1
-                    # print("ca is under plane a and is over p2", aa)
-        ratio = number_atoms_hits/number_atoms_in_between
-        print("RATIO", ratio)
-        print(self.plane1, self.plane2)
-        # If better ratio
-        if  ratio > self.best_ratio:
+                number_atoms_in_between += 1 # a voir
+                in_between_planes.append(aa)
+        
+        number_atoms_in_between = len(in_between_planes)
+
+        # When no more atoms between the two planes, exiting the function, we stop the exploring on this side of the axis
+        if number_atoms_in_between == 0:
+            print("No more atoms in between")
+            return (False)
+        
+        # Computing the relative hydrophobicity of the selected amino_acids : to maximise
+        hydrophobicity = compute_relative_hydrophobicity(in_between_planes)
+
+        if  hydrophobicity > self.best_hydrophobicity:
             # Updating the "best" match
-            self.best_ratio = ratio
-            self.best_number_hits = number_atoms_hits
-            self.best_number_aa = number_atoms_in_between
-            return True # its better, so we continue the while
+            #self.best_number_hits = number_atoms_hits
+            #self.best_number_aa = number_atoms_in_between
+            print("HYDROPHOBICITY xas",self.best_hydrophobicity)
+            self.best_hydrophobicity = hydrophobicity
+            print("HYDROPHOBICITY IMPROVEd to",self.best_hydrophobicity)
         else:
-            # its not better
+            # If its not better
             return False
 
+
+def compute_relative_hydrophobicity(amino_acid_sequence):
+    relative_hydrophobicity = 0
+    for aa in amino_acid_sequence:
+        relative_hydrophobicity += aa.hydrophobicity
+    return relative_hydrophobicity
 
 
 def plot_plane(plane1, plane2=None, point=None):
@@ -240,7 +263,7 @@ if __name__ == '__main__':
     caculate_solvant_accessibility(structure, input_file=pdb)
 
     mass_center = Point(3.19,37.1,36.2)
-    directions = find_points(1000, mass_center)
+    directions = find_points(3, mass_center)
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.scatter3D(mass_center.get_x(), mass_center.get_y(), mass_center.get_z(), color="red")
