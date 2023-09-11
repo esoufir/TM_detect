@@ -33,11 +33,6 @@ class Protein:
     def set_mass_center(self, new_mass_center):
         self.mass_center = new_mass_center
 
-    def print_protein(self):
-        for residue in self.amino_acid_sequence:
-            print(residue.get_code(), end=" ")
-        print()
-
     def find_best_axis(self):
         best_axis_val = 0
         best_number_hits = 0
@@ -76,22 +71,6 @@ def caculate_solvant_accessibility(structure, input_file):
     return dssp
 
 
-def find_limits(self): # TODO : ca sert ? 
-    for aa in self.amino_< acid_sequence:
-        if aa.x > self.x_max :
-            self.x_max = aa.x
-        if aa.y > self.y_max :
-            self.y_max = aa.y
-        if aa.z > self.z_max :
-            self.z_max = aa.z
-        
-        if aa.x < self.x_min :
-            self.x_min = aa.x
-        if aa.y < self.y_min :
-            self.y_min = aa.y
-        if aa.z < self.z_min :
-            self.z_min = aa.z
-
 def parse_pdb(input_file):
     # TODO: Parse the PDB File to get only one chain (pour le moment, cf extension) and get residues and atoms and
     #  put them in objects
@@ -112,34 +91,34 @@ def parse_pdb(input_file):
             selected_residues.append(res_id)
     # Adapt with the condition of the exercise : 
     for model in structure:
-        print(f"Found {len(model)} chains in structure...")
-        for chain in model:
-            xm, ym, zm = compute_mass_center(chain)
-            protein.mass_center = Vector.Point(xm, ym, zm)
-            for residue in chain:
-                # Getting the C-alpha of the exposed residues
-                if residue.get_id()[1] in selected_residues:
-                    if residue.has_id("CA"):
-                        atom = residue['CA']
-                        x, y, z = atom.get_coord()
-                        # Creating and setting the AminoAcid object
-                        new_amino_acid = AminoAcid(code=residue.get_resname(), id=id_amino_acid, x=x, y=y, z=z)
-                        # Linking the amino acid to its protein object
-                        protein.add_to_amino_acid_sequence(new_amino_acid=new_amino_acid)
-                        id_amino_acid += 1    
+        print(f"Found {len(model)} chains in structure...")# TODO : ADPAPT CHAIN
+        chain = model["A"] #TODO: default
+        xm, ym, zm = compute_mass_center(chain)
+        protein.mass_center = Vector.Point(xm, ym, zm)
+        for residue in chain:
+            # Getting the C-alpha of the exposed residues
+            if residue.get_id()[1] in selected_residues:
+                if residue.has_id("CA"):
+                    atom = residue['CA']
+                    x, y, z = atom.get_coord()
+                    # Creating and setting the AminoAcid object
+                    new_amino_acid = AminoAcid(code=residue.get_resname(), id=id_amino_acid, x=x, y=y, z=z)
+                    # Linking the amino acid to its protein object
+                    protein.add_to_amino_acid_sequence(new_amino_acid=new_amino_acid)
+                    id_amino_acid += 1    
     return protein
 
 
 def show_in_pymol(plane1, plane2, pdb_file, mass_center, point_x=None):
     pymol.finish_launching()
-    pymol.cmd.load(pdb_file, "molecule_name")
+    pymol.cmd.load(pdb_file, "protein")
 
     # Determine the dimensions of the molecule in the X-axis
     x_min, x_max = float("inf"), float("-inf")
     # Define the Y and Z range for the points
     y_min, y_max = -15, 50  # Adjust the Y range as needed
 
-    for atom in pymol.cmd.get_model("molecule_name").atom:
+    for atom in pymol.cmd.get_model("protein").atom:
         x = atom.coord[0]
         if x < x_min:
             x_min = x
@@ -208,15 +187,7 @@ def show_in_pymol(plane1, plane2, pdb_file, mass_center, point_x=None):
         pymol.cmd.show("spheres", atom_name)
 
     # Show the protein structure
-    pymol.cmd.show("cartoon", "molecule_name")
-
-    # Zoom to fit the view
-    pymol.cmd.zoom()
-
-    # Save an image if needed
-    pymol.cmd.png("planes.png")
-    # TODO XRAY pour le PNG
-
+    pymol.cmd.show("cartoon", "protein")
 
 # TODO :All the logging file https://docs.python.org/3/howto/logging.html
 
@@ -226,14 +197,31 @@ if __name__ == '__main__':
         prog='ProgramName',
         description='What the program does',
         epilog='Text at the bottom of help')
-    parser.add_argument('filename', help="A PDB file...")
-    # parser.add_argument('-c', '--count')      # option that takes a value
-    args = parser.parse_args()
-    print(f"Command : Protein.py {args.filename}")  # to adapt
+    parser.add_argument('filename', help="A PDB file...") #TODO : Complete
+    
+    # Optionnal arguments :
+    parser.add_argument('-c', help = "Chain to analyze in the PDB file. (default is chain A)")
+    parser.add_argument('-n', help = "Number of points to place on the sphere. (default is 15)") # TODO : Mouais
+    parser.add_argument('-w', help = "Initial width of the membrane. (default is 14 A)") 
+    parser.add_argument('-g', help = "Gap of sliding membrane along an axis. (default is 1 A)") 
+    parser.add_argument('-m', help = "Gap of optimising membrane's width. (default is 1 A)") 
 
-    protein = parse_pdb(args.filename)
+    args = parser.parse_args()
+    print(f"Command : Protein.py {args.filename}")  # TODO to adapt + change program name
+
+    # INITIALIZATIONS : 
+
     # Number of points
     n = 15
+    chain = "A"
+    width = 14
+    gap = 1
+    gap_mebrane = 1
+
+    # Parsing the arguments :
+    protein = parse_pdb(args.filename)
+    
+    
 
     directions = Vector.find_points(n, protein.mass_center)
     print("Calculating the planes... ")
@@ -245,7 +233,7 @@ if __name__ == '__main__':
         normal = Vector.find_director_vector(point=point, center_coordinate=protein.mass_center)
         # Construction of the two planes representing the membrane : 
         plane1 = Vector.Plane(point=point, normal=normal)
-        plane2 = plane1.complementary(14)  # 14 Angstrom, à voir pour la modularité TODO
+        plane2 = plane1.complementary(width) 
 
 
         axis = Vector.Axis(p1=plane1, p2=plane2)
@@ -253,20 +241,17 @@ if __name__ == '__main__':
         # Looking above : 
         while axis.explore_axe(protein.amino_acid_sequence,ref = best_axis_tmp) == True:
             # Keeping in mind the best axis found yet : 
-            #print("TEST", axis.best_number_hits , best_axis_tmp.best_number_hits)
-            """if axis.best_hydrophobicity > best_axis_tmp.best_hydrophobicity : 
-                best_axis_tmp = copy.deepcopy(axis)"""
             
             # TODO: Function to "reinitialize the axis by sliding the plane + resetting to 0 the matches"
             # Sliding the planes if necessary
-            axis.plane1.slide_plane(1)
-            axis.plane2.slide_plane(1)  # TODO : adapte la gap je pense
+            axis.plane1.slide_plane(gap)
+            axis.plane2.slide_plane(gap)  # TODO : adapte la gap je pense
         
         print("BEST AXIS AFTER ABOVE EXPLORATION", best_axis_tmp)
         
         # Resetting start positions
         plane1 = Vector.Plane(point=point, normal=normal)
-        plane2 = plane1.complementary(14)  # 14 Angstrom, à voir pour la modularité TODO
+        plane2 = plane1.complementary(width)
         axis = Vector.Axis(p1=plane1, p2=plane2) # pas sure de si faut le remettre
 
         # Looking below :
@@ -276,78 +261,61 @@ if __name__ == '__main__':
                 best_axis_tmp = copy.deepcopy(axis)
                 print("AXIS IMPROVED BELOW")"""
             # Sliding the planes if necessary
-            axis.plane1.slide_plane(-1)
-            axis.plane2.slide_plane(-1)
+            axis.plane1.slide_plane(-gap)
+            axis.plane2.slide_plane(-gap)
             
-            
-        
         print("BEST AXIS AFTER below EXPLORATION", best_axis_tmp)
         
         # Saving the best position for the axis
         protein.best_positions.append(best_axis_tmp)
 
-    
-
     best_axis = protein.find_best_axis()
     print("BEST AXIS BEFORE ADJUSTING IS ", best_axis, "WITH PLANES = ", best_axis.plane1, best_axis.plane2)    
-    #show_in_pymol(best_axis.plane1,best_axis.plane2, args.filename, mass_center=protein.mass_center, point_x=best_axis.plane1.point)    
-    #sys.exit(0)
-    # TODO: Faire l'optimisation de la largeur de la membrane
-
     print("OPTIMISING MEMBRANE WIDTH...")
-    print("WIDTH WAS", abs(best_axis.plane1.d - best_axis.plane2.d))
+    #print("WIDTH WAS", abs(best_axis.plane1.d - best_axis.plane2.d))
     # Adjusting the bottom plane of the best axis :
-    gap = 1
+
     # Keeping in mynid what was the best axis with the best planes yet :
     best_axis_tmp = copy.deepcopy(best_axis)
-    best_axis.plane2.slide_plane(gap) 
+    best_axis.plane2.slide_plane(gap_mebrane) 
     
     while best_axis.explore_axe_bis(protein.amino_acid_sequence, ref =best_axis_tmp ): 
-            print("IN",best_axis.best_ratio, best_axis_tmp.best_ratio)
-            # Sliding the planes if necessary
-            best_axis.plane2.slide_plane(gap)
+            best_axis.plane2.slide_plane(gap_mebrane)
            
     print("WIDTH 1 IS", abs(best_axis_tmp.plane1.d - best_axis_tmp.plane2.d))
    
     # best_axis_tmp is the best yet
     best_axis_tmp2 = copy.deepcopy(best_axis_tmp)
-    best_axis_tmp.plane2.slide_plane(-gap)
+    best_axis_tmp.plane2.slide_plane(-gap_mebrane)
     while best_axis_tmp.explore_axe_bis(protein.amino_acid_sequence, ref =best_axis_tmp2 ): 
-            print("IN2")
-            """if best_axis_tmp.best_ratio > best_axis_tmp.best_ratio : 
-                best_axis_tmp2 = copy.deepcopy(best_axis_tmp)"""
-                #print("BEST AXIS IMPROVED ABOVE")
             # Sliding the planes if necessary
-            best_axis_tmp.plane2.slide_plane(-gap)
+            best_axis_tmp.plane2.slide_plane(-gap_mebrane)
             
     print("WIDTH 2 IS", abs(best_axis_tmp2.plane1.d - best_axis_tmp2.plane2.d))
         
     # best_axis_tmp is the best yet
     best_axis_tmp3 = copy.deepcopy(best_axis_tmp2)
-    best_axis_tmp2.plane1.slide_plane(-gap)
+    best_axis_tmp2.plane1.slide_plane(-gap_mebrane)
     while best_axis_tmp2.explore_axe_bis(protein.amino_acid_sequence, ref =best_axis_tmp3 ): 
-            print("IN3")
-           
-                #print("BEST AXIS IMPROVED below")
             # Sliding the planes if necessary
-            best_axis_tmp2.plane1.slide_plane(-gap)
+            best_axis_tmp2.plane1.slide_plane(-gap_mebrane)
             
     print("WIDTH 3 IS", abs(best_axis_tmp3.plane1.d - best_axis_tmp3.plane2.d))
     
       # best_axis_tmp is the best yet
     best_axis_tmp4 = copy.deepcopy(best_axis_tmp3)
-    best_axis_tmp3.plane1.slide_plane(gap)
+    best_axis_tmp3.plane1.slide_plane(gap_mebrane)
     while best_axis_tmp3.explore_axe_bis(protein.amino_acid_sequence, ref =best_axis_tmp4 ): 
             print("IN4")
             # Sliding the planes if necessary
-            best_axis_tmp3.plane1.slide_plane(gap)
+            best_axis_tmp3.plane1.slide_plane(gap_mebrane)
            
     # At the end, the best axis with the good planes positions is in best_axis_tmp2
     #print("BEST AXIS OVERALL IS ", best_axis_tmp2, "WITH PLANES = ", best_axis.plane1, best_axis.plane2)
     print("WIDTH IS", abs(best_axis_tmp4.plane1.d - best_axis_tmp4.plane2.d))
     show_in_pymol(best_axis_tmp4.plane1,best_axis_tmp4.plane2, args.filename, mass_center=protein.mass_center)
-    # A mettre à la toute fin : """
-    #show_in_pymol(best_axis_tmp4.plane1,best_axis_tmp4.plane2, args.filename, mass_center=protein.mass_center)    
+    # TODO : File output with the TM segments
+   
 
   
 

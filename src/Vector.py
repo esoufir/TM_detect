@@ -167,37 +167,26 @@ class Axis:
         # Computing the relative hydrophobicity of the selected amino_acids : to maximise
         hydrophobicity, n_hits, n_total = compute_relative_hydrophobicity(in_between_planes)
         # TODO : améliorer hydrophobicité seulement si le nombre de résidus hydrophobes et le total sont plus grand qu'avant ???
-        print("NHITS was", ref.best_number_hits)
-        print("N_tot was", ref.best_number_aa)
-        print("HYDROPHOBICITY was",hydrophobicity)     
-        print("NHITS REF",n_hits)
-        print("N_tot REF", n_total)
-        print("HYDROPHOBICITY REF",ref.best_hydrophobicity)      
+        #print("NHITS was", ref.best_number_hits)
+        #print("N_tot was", ref.best_number_aa)
+        #print("HYDROPHOBICITY was",hydrophobicity)     
+        #print("NHITS REF",n_hits)
+        #print("N_tot REF", n_total)
+        #print("HYDROPHOBICITY REF",ref.best_hydrophobicity)      
         if  hydrophobicity > ref.best_hydrophobicity and number_atoms_in_between > ref.best_number_aa:
             # Updating the "best" match
-            """print("NHITS was", ref.best_number_hits)
-            print("N_tot was", ref.best_number_aa)
-            print("HYDROPHOBICITY was",ref.best_hydrophobicity)"""
-            print("UPGRADE PLANE REF")
             ref.best_number_hits = n_hits
             ref.best_number_aa = n_total
             ref.best_hydrophobicity = hydrophobicity
             ref.plane1 = copy.deepcopy(self.plane1)
             ref.plane2 = copy.deepcopy(self.plane2)
-
             return True
-
-            """print("NHITS is", ref.best_number_hits)
-            print("N_tot is", ref.best_number_aa)
-            print("HYDROPHOBICITY is",ref.best_hydrophobicity)"""
         else:
             # If its not better
             return False
-        return True
 
 def compute_relative_hydrophobicity(amino_acid_sequence):
     relative_hydrophobicity = 0
-
     for aa in amino_acid_sequence:
         relative_hydrophobicity += aa.hydrophobicity
     # Number of hits and number of atoms must be significant important #TODO > 10 ? pour éviter les 1/1 ratios
@@ -275,43 +264,5 @@ def caculate_solvant_accessibility(structure, input_file):  # a voir pour identi
             asa_values[key] = asa_value
     # Now, asa_values is a dictionary containing ASA values for each residue in the structure
     return asa_values
-
-
-"""if __name__ == '__main__':
-    # Plot points check
-    pdb = "../data/1prn.pdb"
-    p = PDBParser()
-    # TODO: Adapt le X
-    structure = p.get_structure("X", pdb)
-
-    caculate_solvant_accessibility(structure, input_file=pdb)
-
-    mass_center = Point(3.19,37.1,36.2)
-    directions = find_points(20, mass_center)
-    fig = plt.figure()
-    ax = fig.add_subplot(111, projection='3d')
-    ax.scatter3D(mass_center.get_x(), mass_center.get_y(), mass_center.get_z(), color="red")
-    print("Plotting the points on 3D")
-    for d in directions:
-        ax.scatter3D(d.get_x(), d.get_y(), d.get_z())
-    plt.show()
-    print("Calculating the planes... ")
-    # Planes are defined by a point and a normal vector
-    for d in directions:
-        point  = d
-        normal = find_director_vector(point=d,center_coordinate=mass_center)
-        if normal.get_z() != 0:
-            #print("Plotting the planes on 3D")
-            plane = Plane(point=point, normal=normal)
-            plane2 = plane.complementary(14)        
-            plane.slide_plane(10) 
-            #plane2.slide_plane(-60)
-            # Plane = green
-            # Plane2 = red
-            plot_plane(plane1=plane,plane2 = plane2, point = Point(6.462 , 37.060 , 37.424))
-        else:
-            print("Vecteur directeur nul (z), pass --- ")
-        
-
 
 # TODO : Prendre le plus d'aa hits possible dans la tranche avec le meilleur ratio"""

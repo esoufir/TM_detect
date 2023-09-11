@@ -1,9 +1,7 @@
 import Vector # changer le nom
 
 class AminoAcid:
-        
         hydrophobics_amino_acids = ['PHE','GLY','ILE','LEU','MET', 'VAL', 'TRP', 'TYR']
-        #TODO: Que faire des OH ? 
         def __init__(self, code, id,x,y,z):
             self.id = id
             self.code = code
@@ -24,12 +22,9 @@ class AminoAcid:
 
         def get_code(self):
             return(self.code)
+        
         def add_atom_to_amino_acid(self, new_atom):
             self.atoms_list.append(new_atom)
-        
-        def set_asa(self,asa):
-            #Setter - Sets solvant accessibility
-            self.asa=asa
         
         def __str__(self):
             return f"AA n°{self.id} is {self.code} at ({self.point.get_x():.3f},{self.point.get_y():.3f},{self.point.get_z():.3f}) \n"
