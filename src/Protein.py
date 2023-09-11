@@ -134,8 +134,6 @@ def show_in_pymol(plane1, plane2, pdb_file, mass_center, point_x=None):
         center_x = (x_min + x_max) / 2.0
         center_y = (y_min + y_max) / 2.0  # Adjust the Y coordinate as needed
 
-    
-
     # Define the step size for sampling points
     step = 3
 
@@ -205,24 +203,41 @@ if __name__ == '__main__':
     parser.add_argument('-w', help = "Initial width of the membrane. (default is 14 A)") 
     parser.add_argument('-g', help = "Gap of sliding membrane along an axis. (default is 1 A)") 
     parser.add_argument('-m', help = "Gap of optimising membrane's width. (default is 1 A)") 
-
-    args = parser.parse_args()
-    print(f"Command : Protein.py {args.filename}")  # TODO to adapt + change program name
-
+    
     # INITIALIZATIONS : 
 
     # Number of points
     n = 30
+    # Chain to focus on
     chain = "A"
     width = 14
     gap = 1
     gap_mebrane = 1
+    
+    args = parser.parse_args()
+
+    # TODO: pbl avec Pymol apres
+    if args.w: 
+        width = float(args.w)
+
+    if args.c: 
+        chain = args.c
+    
+    if args.n:
+        n = int(args.n)
+
+    if args.g:
+        gap = float(args.g)
+
+    if args.m:
+        gap_mebrane = float(args.m)  
+      
+    # Sum-up command : 
+    print(f"Command : Protein.py {args.filename}")  # TODO to adapt + change program name
 
     # Parsing the arguments :
     protein = parse_pdb(args.filename)
     
-    
-
     directions = Vector.find_points(n, protein.mass_center)
     print("Calculating the planes... ")
     # For each direction...
@@ -311,8 +326,10 @@ if __name__ == '__main__':
     print("WIDTH IS", abs(best_axis_tmp4.plane1.d - best_axis_tmp4.plane2.d))
     print("BEST AXIS OVERALL", best_axis_tmp4)
     show_in_pymol(best_axis_tmp4.plane1,best_axis_tmp4.plane2, args.filename, mass_center=protein.mass_center)
+    
     # TODO : File output with the TM segments
-   
+    best_axis_tmp4.find_tm_segment(protein.amino_acid_sequence)
+            
 
   
 

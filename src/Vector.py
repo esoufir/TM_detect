@@ -136,13 +136,6 @@ class Axis:
         for atom_in_plan in in_between_planes:
             if atom_in_plan.is_hydrophobic : 
                 n_hydrophobe_in_plan+=1
-
-        """print("NB hydrophile out", nb_hydrophile_out_of_plan)
-        print("NB hydrophobe in", n_hydrophobe_in_plan)
-        print("NB hydrophile tot", n_total_hydrophile)
-        print("NB hydrophobe tot", n_total_hydrophobic)"""
-
-        
         
         # When no more atoms between the two planes, exiting the function, we stop the exploring on this side of the axis
         if number_atoms_in_between == 0:
@@ -152,7 +145,6 @@ class Axis:
         # Computing the relative hydrophobicity of the selected amino_acids : to maximise
         #hydrophobicity, n_hits, n_total = compute_relative_hydrophobicity(in_between_planes)
         hydrophobicity = (nb_hydrophile_out_of_plan/n_total_hydrophile) + (n_hydrophobe_in_plan/n_total_hydrophobic)
-        print("HYDROP RELLLLLLLLLLLLLLLL ",hydrophobicity)
         #print(f"Hit ratio {number_atoms_hits} \t {number_atoms_in_between} = {number_atoms_hits/number_atoms_in_between}")
 
         if  hydrophobicity > ref.best_hydrophobicity :
@@ -160,7 +152,6 @@ class Axis:
             """print("NHITS was", ref.best_number_hits)
             print("N_tot was", ref.best_number_aa)
             print("HYDROPHOBICITY was",ref.best_hydrophobicity)"""
-            # COPIE GENERALE ?
             #ref.best_number_hits = n_hits
             #ref.best_number_aa = n_total
             ref.best_hydrophobicity = hydrophobicity
@@ -202,14 +193,6 @@ class Axis:
         for atom_in_plan in in_between_planes:
             if atom_in_plan.is_hydrophobic : 
                 n_hydrophobe_in_plan+=1
-
-        """print("NB hydrophile out", nb_hydrophile_out_of_plan)
-        print("NB hydrophobe in", n_hydrophobe_in_plan)
-        print("NB hydrophile tot", n_total_hydrophile)
-        print("NB hydrophobe tot", n_total_hydrophobic)"""
-
-        
-        
         # When no more atoms between the two planes, exiting the function, we stop the exploring on this side of the axis
         if number_atoms_in_between == 0:
             print("No more atoms in between")
@@ -218,8 +201,6 @@ class Axis:
         # Computing the relative hydrophobicity of the selected amino_acids : to maximise
         #hydrophobicity, n_hits, n_total = compute_relative_hydrophobicity(in_between_planes)
         hydrophobicity = (nb_hydrophile_out_of_plan/n_total_hydrophile) + (n_hydrophobe_in_plan/n_total_hydrophobic)
-        print("HYDROP RELLLLLLLLLLLLLLLL ",hydrophobicity)
-        #print(f"Hit ratio {number_atoms_hits} \t {number_atoms_in_between} = {number_atoms_hits/number_atoms_in_between}")
 
         if  hydrophobicity > ref.best_hydrophobicity :
             # Updating the "best" match
@@ -236,6 +217,33 @@ class Axis:
         else:
             # If its not better
             return False
+    
+
+    def find_tm_segment(self, amino_acid_sequence):
+        with open("../results/results_tm_segments.txt", "w") as f_out:
+            in_between_planes = []
+            for aa in (amino_acid_sequence):
+                if (self.plane1.is_below(aa.point) and self.plane2.is_above(aa.point)) or (self.plane2.is_below(
+                        aa.point) and self.plane1.is_above(aa.point)):
+                    in_between_planes.append(aa)
+            tm = []
+            for aa in in_between_planes:
+                if len(tm) ==0:
+                    tm.append(aa.id)
+                else:
+                    # Getting the last one added
+                    last_added = tm[(len(tm)-1)]
+                    
+                    if last_added + 1 == aa.id : 
+                        tm.append(aa.id)
+                    else : 
+                        # Writing in ab output file
+                        f_out.write(f"Transmembrane segment from residue {min(tm)} to {max(tm)}\n")
+                        tm = []
+                        tm.append(aa.id)
+
+            
+            
 
 def compute_relative_hydrophobicity(amino_acid_sequence):
     relative_hydrophobicity = 0
@@ -246,28 +254,6 @@ def compute_relative_hydrophobicity(amino_acid_sequence):
     return (relative_hydrophobicity/len(amino_acid_sequence), relative_hydrophobicity, len(amino_acid_sequence))
 
 
-"""def plot_plane(plane1, plane2=None, point=None):
-    X, Z = np.meshgrid(range(100), range(100))
-    # Calculate the corresponding y values for the plane
-    # mouais, plutot faire en sorte quil ne soit jamais 0
-    fig = plt.figure()
-    ax = fig.add_subplot(projection='3d')
-    #mass center:
-
-    ax.scatter3D(3.19,37.1,36.2, color="blue")
-
-    ax.scatter3D(point.get_x(), point.get_y(), point.get_z(), color="red")
-    if point is not None and plane1.d != 0:
-        Y1 = (-plane1.a * X - plane1.c * Z - plane1.d) / plane1.b
-        ax.plot_surface(X, Y1, Z, alpha=0.2, color="green")
-
-    if plane2 is not None and plane2.d != 0:
-        Y2 = (-plane2.a * X - plane2.c * Z - plane2.d) / plane2.b
-        ax.plot_surface(X, Y2, Z, color='red', alpha=0.2)
-    plt.show()"""
-
-
-# TODO: faire que le demi cercle
 def find_points(n_points, center_coordinates):
     points = []
     for k in range(1, n_points + 1):  # n-points pour éviter division par 0
@@ -282,6 +268,7 @@ def find_points(n_points, center_coordinates):
         y = center_coordinates.get_y() + math.cos(theta)
         z = center_coordinates.get_z() + math.cos(phi) * math.sin(theta)
         points.append(Point(x, y, z))
+    # Get only the points from half circle :
     above_x_axis_points = [point for point in points if point.get_z() > center_coordinates.get_z()]
     return above_x_axis_points
 
@@ -318,4 +305,4 @@ def caculate_solvant_accessibility(structure, input_file):  # a voir pour identi
     # Now, asa_values is a dictionary containing ASA values for each residue in the structure
     return asa_values
 
-# TODO : Prendre le plus d'aa hits possible dans la tranche avec le meilleur ratio"""
+
