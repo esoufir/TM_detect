@@ -110,34 +110,59 @@ class Axis:
     def explore_axe(self, amino_acid_sequence, ref): #axis de ref avec les meilleurs métriques obtenues
         in_between_planes = []
         number_atoms_in_between = 0 # en vrai sert à rien vu que c'est len de in_between_planes. 
-        number_atoms_hits = 0
+        n_total_hydrophobic = 0 
+        n_total_hydrophile = 0
+        nb_hydrophile_out_of_plan = 0
+        n_hydrophobe_in_plan = 0
         for aa in (amino_acid_sequence):
             if (self.plane1.is_below(aa.point) and self.plane2.is_above(aa.point)) or (self.plane2.is_below(
                     aa.point) and self.plane1.is_above(aa.point)):
                 number_atoms_in_between += 1
                 in_between_planes.append(aa)
+            if aa.is_hydrophobic :
+                n_total_hydrophobic+=1
+            else:
+                n_total_hydrophile+=1
 
         number_atoms_in_between = len(in_between_planes)
 
+        # Hydrophile atoms not in plane : 
+        for aa in amino_acid_sequence: 
+            # if the atom is not in between the planes : 
+            if aa not in in_between_planes and aa.is_hydrophobic == False:
+                nb_hydrophile_out_of_plan+=1
+
+        # Hydrophobic atoms in plan
+        for atom_in_plan in in_between_planes:
+            if atom_in_plan.is_hydrophobic : 
+                n_hydrophobe_in_plan+=1
+
+        """print("NB hydrophile out", nb_hydrophile_out_of_plan)
+        print("NB hydrophobe in", n_hydrophobe_in_plan)
+        print("NB hydrophile tot", n_total_hydrophile)
+        print("NB hydrophobe tot", n_total_hydrophobic)"""
+
+        
+        
         # When no more atoms between the two planes, exiting the function, we stop the exploring on this side of the axis
         if number_atoms_in_between == 0:
             print("No more atoms in between")
             return (False)
         
         # Computing the relative hydrophobicity of the selected amino_acids : to maximise
-        hydrophobicity, n_hits, n_total = compute_relative_hydrophobicity(in_between_planes)
-
+        #hydrophobicity, n_hits, n_total = compute_relative_hydrophobicity(in_between_planes)
+        hydrophobicity = (nb_hydrophile_out_of_plan/n_total_hydrophile) + (n_hydrophobe_in_plan/n_total_hydrophobic)
+        print("HYDROP RELLLLLLLLLLLLLLLL ",hydrophobicity)
         #print(f"Hit ratio {number_atoms_hits} \t {number_atoms_in_between} = {number_atoms_hits/number_atoms_in_between}")
-        # TODO : améliorer hydrophobicité seulement si le nombre de résidus hydrophobes et le total sont plus grand qu'avant ???
 
-        if  hydrophobicity > ref.best_hydrophobicity and n_hits > ref.best_number_hits and n_total > ref.best_number_aa:
+        if  hydrophobicity > ref.best_hydrophobicity :
             # Updating the "best" match
             """print("NHITS was", ref.best_number_hits)
             print("N_tot was", ref.best_number_aa)
             print("HYDROPHOBICITY was",ref.best_hydrophobicity)"""
             # COPIE GENERALE ?
-            ref.best_number_hits = n_hits
-            ref.best_number_aa = n_total
+            #ref.best_number_hits = n_hits
+            #ref.best_number_aa = n_total
             ref.best_hydrophobicity = hydrophobicity
             ref.plane1 = copy.deepcopy(self.plane1)
             ref.plane2 = copy.deepcopy(self.plane2)
@@ -151,32 +176,59 @@ class Axis:
     def explore_axe_bis(self, amino_acid_sequence,ref):
         in_between_planes = []
         number_atoms_in_between = 0 # en vrai sert à rien vu que c'est len de in_between_planes. 
+        n_total_hydrophobic = 0 
+        n_total_hydrophile = 0
+        nb_hydrophile_out_of_plan = 0
+        n_hydrophobe_in_plan = 0
         for aa in (amino_acid_sequence):
             if (self.plane1.is_below(aa.point) and self.plane2.is_above(aa.point)) or (self.plane2.is_below(
                     aa.point) and self.plane1.is_above(aa.point)):
                 number_atoms_in_between += 1
                 in_between_planes.append(aa)
+            if aa.is_hydrophobic :
+                n_total_hydrophobic+=1
+            else:
+                n_total_hydrophile+=1
 
         number_atoms_in_between = len(in_between_planes)
-        print("NB ATOMS CONSIDERED", number_atoms_in_between)
+
+        # Hydrophile atoms not in plane : 
+        for aa in amino_acid_sequence: 
+            # if the atom is not in between the planes : 
+            if aa not in in_between_planes and aa.is_hydrophobic == False:
+                nb_hydrophile_out_of_plan+=1
+
+        # Hydrophobic atoms in plan
+        for atom_in_plan in in_between_planes:
+            if atom_in_plan.is_hydrophobic : 
+                n_hydrophobe_in_plan+=1
+
+        """print("NB hydrophile out", nb_hydrophile_out_of_plan)
+        print("NB hydrophobe in", n_hydrophobe_in_plan)
+        print("NB hydrophile tot", n_total_hydrophile)
+        print("NB hydrophobe tot", n_total_hydrophobic)"""
+
+        
+        
         # When no more atoms between the two planes, exiting the function, we stop the exploring on this side of the axis
         if number_atoms_in_between == 0:
             print("No more atoms in between")
             return (False)
         
         # Computing the relative hydrophobicity of the selected amino_acids : to maximise
-        hydrophobicity, n_hits, n_total = compute_relative_hydrophobicity(in_between_planes)
-        # TODO : améliorer hydrophobicité seulement si le nombre de résidus hydrophobes et le total sont plus grand qu'avant ???
-        #print("NHITS was", ref.best_number_hits)
-        #print("N_tot was", ref.best_number_aa)
-        #print("HYDROPHOBICITY was",hydrophobicity)     
-        #print("NHITS REF",n_hits)
-        #print("N_tot REF", n_total)
-        #print("HYDROPHOBICITY REF",ref.best_hydrophobicity)      
-        if  hydrophobicity > ref.best_hydrophobicity and number_atoms_in_between > ref.best_number_aa:
+        #hydrophobicity, n_hits, n_total = compute_relative_hydrophobicity(in_between_planes)
+        hydrophobicity = (nb_hydrophile_out_of_plan/n_total_hydrophile) + (n_hydrophobe_in_plan/n_total_hydrophobic)
+        print("HYDROP RELLLLLLLLLLLLLLLL ",hydrophobicity)
+        #print(f"Hit ratio {number_atoms_hits} \t {number_atoms_in_between} = {number_atoms_hits/number_atoms_in_between}")
+
+        if  hydrophobicity > ref.best_hydrophobicity :
             # Updating the "best" match
-            ref.best_number_hits = n_hits
-            ref.best_number_aa = n_total
+            """print("NHITS was", ref.best_number_hits)
+            print("N_tot was", ref.best_number_aa)
+            print("HYDROPHOBICITY was",ref.best_hydrophobicity)"""
+            # COPIE GENERALE ?
+            #ref.best_number_hits = n_hits
+            #ref.best_number_aa = n_total
             ref.best_hydrophobicity = hydrophobicity
             ref.plane1 = copy.deepcopy(self.plane1)
             ref.plane2 = copy.deepcopy(self.plane2)
@@ -188,7 +240,8 @@ class Axis:
 def compute_relative_hydrophobicity(amino_acid_sequence):
     relative_hydrophobicity = 0
     for aa in amino_acid_sequence:
-        relative_hydrophobicity += aa.hydrophobicity
+        if aa.is_hydrophobic :
+            relative_hydrophobicity+=1
     # Number of hits and number of atoms must be significant important #TODO > 10 ? pour éviter les 1/1 ratios
     return (relative_hydrophobicity/len(amino_acid_sequence), relative_hydrophobicity, len(amino_acid_sequence))
 

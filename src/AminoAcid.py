@@ -6,6 +6,9 @@ class AminoAcid:
             self.id = id
             self.code = code
             self.hydrophobicity  = 0
+            self.is_hydrophobic = False
+            if self.code in AminoAcid.hydrophobics_amino_acids:
+                self.is_hydrophobic = True
             # molecule .... ? Avec quelle structure de données la représenter
             if code in AminoAcid.hydrophobics_amino_acids:
                 self.hydrophobicity = 1

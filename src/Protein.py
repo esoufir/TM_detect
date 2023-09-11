@@ -38,7 +38,7 @@ class Protein:
         best_number_hits = 0
         best_axis = None
         for axis in self.best_positions:
-            if axis.best_hydrophobicity > best_axis_val and axis.best_number_hits > best_number_hits:
+            if axis.best_hydrophobicity > best_axis_val :
                 best_axis_val = axis.best_hydrophobicity
                 best_axis = copy.deepcopy(axis)
         return best_axis
@@ -212,7 +212,7 @@ if __name__ == '__main__':
     # INITIALIZATIONS : 
 
     # Number of points
-    n = 15
+    n = 30
     chain = "A"
     width = 14
     gap = 1
@@ -239,7 +239,7 @@ if __name__ == '__main__':
         axis = Vector.Axis(p1=plane1, p2=plane2)
         best_axis_tmp =  copy.deepcopy(axis)
         # Looking above : 
-        while axis.explore_axe(protein.amino_acid_sequence,ref = best_axis_tmp) == True:
+        while axis.explore_axe(protein.amino_acid_sequence,ref = best_axis_tmp) == True :
             # Keeping in mind the best axis found yet : 
             
             # TODO: Function to "reinitialize the axis by sliding the plane + resetting to 0 the matches"
@@ -256,10 +256,6 @@ if __name__ == '__main__':
 
         # Looking below :
         while axis.explore_axe(protein.amino_acid_sequence, ref = best_axis_tmp):
-            
-            """if axis.best_hydrophobicity > best_axis_tmp.best_hydrophobicity  : 
-                best_axis_tmp = copy.deepcopy(axis)
-                print("AXIS IMPROVED BELOW")"""
             # Sliding the planes if necessary
             axis.plane1.slide_plane(-gap)
             axis.plane2.slide_plane(-gap)
@@ -268,9 +264,10 @@ if __name__ == '__main__':
         
         # Saving the best position for the axis
         protein.best_positions.append(best_axis_tmp)
-
+    
     best_axis = protein.find_best_axis()
-    print("BEST AXIS BEFORE ADJUSTING IS ", best_axis, "WITH PLANES = ", best_axis.plane1, best_axis.plane2)    
+    print("BEST AXIS BEFORE ADJUSTING IS ", best_axis)    
+    
     print("OPTIMISING MEMBRANE WIDTH...")
     #print("WIDTH WAS", abs(best_axis.plane1.d - best_axis.plane2.d))
     # Adjusting the bottom plane of the best axis :
@@ -306,13 +303,13 @@ if __name__ == '__main__':
     best_axis_tmp4 = copy.deepcopy(best_axis_tmp3)
     best_axis_tmp3.plane1.slide_plane(gap_mebrane)
     while best_axis_tmp3.explore_axe_bis(protein.amino_acid_sequence, ref =best_axis_tmp4 ): 
-            print("IN4")
             # Sliding the planes if necessary
             best_axis_tmp3.plane1.slide_plane(gap_mebrane)
            
     # At the end, the best axis with the good planes positions is in best_axis_tmp2
     #print("BEST AXIS OVERALL IS ", best_axis_tmp2, "WITH PLANES = ", best_axis.plane1, best_axis.plane2)
     print("WIDTH IS", abs(best_axis_tmp4.plane1.d - best_axis_tmp4.plane2.d))
+    print("BEST AXIS OVERALL", best_axis_tmp4)
     show_in_pymol(best_axis_tmp4.plane1,best_axis_tmp4.plane2, args.filename, mass_center=protein.mass_center)
     # TODO : File output with the TM segments
    
