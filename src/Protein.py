@@ -9,6 +9,26 @@ import Vector
 import sys
 
 
+
+class AminoAcid:
+        hydrophobics_amino_acids = ['PHE','GLY','ILE','LEU','MET', 'VAL', 'TRP', 'TYR']
+        def __init__(self, code, id,x,y,z):
+            self.id = id
+            self.code = code
+            self.hydrophobicity  = 0
+            self.is_hydrophobic = False
+            if self.code in AminoAcid.hydrophobics_amino_acids:
+                self.is_hydrophobic = True
+            # molecule .... ? Avec quelle structure de données la représenter
+            if code in AminoAcid.hydrophobics_amino_acids:
+                self.hydrophobicity = 1
+            else :
+                self.hydrophobicity = 0 # ou -1 ? 
+            self.point = Vector.Point(x,y,z)
+        
+        def __str__(self):
+            return f"AA n°{self.id} is {self.code} at ({self.point.get_x():.3f},{self.point.get_y():.3f},{self.point.get_z():.3f}) \n"
+
 class Protein:
     """
     A class to represent a Protein with one chain.
@@ -74,7 +94,7 @@ class Protein:
         """
         result = chain.center_of_mass()
         x, y, z = result[0], result[1], result[2]
-        return Vector.Point(x, y, z)
+        self.mass_center = Vector.Point(x, y, z)
 
 
 def check_input_file(input_file):
@@ -128,9 +148,12 @@ def parse_pdb(input_file):
     print(f"Found {len(exposed_residues)} exposed residues.")
     # TODO : Adapt with the condition of the exercise : 
     model = structure[0]
-    print(f"Found {len(model)} chains in structure...")# TODO : ADPAPT CHAIN
     chain = model["A"] #TODO: default
+
+    # Calculating mass_center of the chain :
     protein.compute_mass_center(chain)
+    print("Mass center is", protein.mass_center)
+
     for residue in chain:
         if residue.has_id("CA"):
             atom = residue['CA']
@@ -138,7 +161,7 @@ def parse_pdb(input_file):
             # Creating and setting the AminoAcid object
             new_amino_acid = AminoAcid(code=residue.get_resname(), id=residue.get_id()[1], x=x, y=y, z=z)
             # Linking the amino acid to its protein object
-            protein.full_sequence.append((new_amino_acid))
+            protein.full_sequence.append(new_amino_acid)
             id_full_amino_acid+=1
             # If the residue is exposed, adding it to a dedicated list :
             if residue.get_id()[1] in exposed_residues:
@@ -241,7 +264,7 @@ def show_in_pymol(plane1, plane2, pdb_file, mass_center, point_x=None):
 
 
 def optimizing_width_membrane(gap_membrane, axis_init,amino_acid_sequence, plane_to_consider): #plane to consider is plane1 or plane 2
-    # Keeping in mynid what was the best axis with the best planes yet :
+    # Keeping in mind what was the best axis with the best planes yet :
     best_axis = copy.deepcopy(axis_init)
     # First slide to be able to compare two diffent axis : 
     if plane_to_consider == 1:
@@ -318,9 +341,7 @@ if __name__ == '__main__':
             # Sliding the planes if necessary
             axis.plane1.slide_plane(gap)
             axis.plane2.slide_plane(gap)         
-            
-        #print("BEST AXIS AFTER ABOVE EXPLORATION", best_axis_tmp)
-
+        
         # Resetting start positions
         plane1 = Vector.Plane(point=point, normal=normal)
         plane2 = plane1.complementary(width)
@@ -356,7 +377,6 @@ if __name__ == '__main__':
            
     print("WIDTH 1 IS", abs(best_axis_tmp.plane1.d - best_axis_tmp.plane2.d))
    
-
     # Adjusting bottom plane below        
     best_axis_tmp2 = optimizing_width_membrane(axis_init=best_axis_tmp, gap_membrane=-gap_membrane, plane_to_consider=2, 
                               amino_acid_sequence=protein.amino_acid_sequence)
@@ -377,10 +397,10 @@ if __name__ == '__main__':
     best_axis_tmp4 = optimizing_width_membrane(axis_init=best_axis_tmp3, gap_membrane=-gap_membrane, plane_to_consider=1, 
                               amino_acid_sequence=protein.amino_acid_sequence)
     print("WIDTH IS", abs(best_axis_tmp4.plane1.d - best_axis_tmp4.plane2.d))
+    
     print("BEST AXIS OVERALL", best_axis_tmp4)
     
     best_axis_tmp4.find_tm_segment(protein)
-
     show_in_pymol(best_axis_tmp4.plane1,best_axis_tmp4.plane2, filename, mass_center=protein.mass_center)
     
     
