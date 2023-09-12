@@ -251,7 +251,7 @@ def show_in_pymol(plane1, plane2, pdb_file, mass_center):
     # Run in quiet mode to avoid problem with argument parsing
     pymol.finish_launching(['pymol', '-q'])
     # Load the PDB file
-    pymol.cmd.load(pdb_file, "protein")  # TODO
+    pymol.cmd.load(pdb_file, "protein")
     pymol.cmd.remove("solvent")
 
     # Determine the dimensions of the molecule in the X-axis

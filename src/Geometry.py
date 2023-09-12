@@ -186,7 +186,7 @@ class Axis:
 
     def __str__(self):
         """Redifining print() comportement."""
-        return f"AXIS with best hydro : {self.best_hydrophobicity}, {self.plane1} \t {self.plane2}"
+        return f"AXIS with best hydro : {self.best_hydrophobicity:.3f}, {self.plane1} \t {self.plane2}"
     
     def explore_axe(self, amino_acid_sequence, ref): #axis de ref avec les meilleurs métriques obtenues
         """

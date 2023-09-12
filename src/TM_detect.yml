@@ -1,0 +1,13 @@
+name: mypymolenv
+channels:
+  - bioconda
+  - conda-forge
+  - defaults
+dependencies:
+  - python=3.7
+  - pymol
+  - biopython
+  - dssp
+  - matplotlib
+  - tzdata
+prefix: /home/emmas/miniconda3/envs/mypymolenv

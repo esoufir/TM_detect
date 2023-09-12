@@ -15,7 +15,7 @@ if __name__ == '__main__':
     parser.add_argument('filename', help="A PDB file")
     
     # Optionnal arguments :
-    parser.add_argument('-n', help = "Number of points to place on the sphere. (default is 15)", type=int, dest = "n", default = 15) # TODO : Mouais
+    parser.add_argument('-n', help = "Number of points to place on the sphere. (default is 15)", type=int, dest = "n", default = 15)
     parser.add_argument('-w', help = "Initial width of the membrane. (default is 14 A)", type=float, dest = "width", default = 14) 
     parser.add_argument('-g', help = "Gap of sliding membrane along an axis. (default is 1 A)", type=float, dest = "gap", default = 1) 
     parser.add_argument('-m', help = "Gap of optimising membrane's width. (default is 1 A)", type=float, dest = "gap_membrane",default = 1) 
@@ -35,7 +35,7 @@ if __name__ == '__main__':
     gap_membrane = args.gap_membrane
       
     # Sum-up command : 
-    print(f"Command : TM_detect.py {filename} -n {n} -w {width} -g {gap} -m {gap_membrane}")
+    print(f"Command : python TM_detect.py {filename} -n {n} -w {width} -g {gap} -m {gap_membrane}")
 
     # Some checks on the input file : 
     check_input_file(filename)
