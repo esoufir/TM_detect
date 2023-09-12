@@ -80,10 +80,9 @@ if __name__ == '__main__':
         protein.best_positions.append(best_axis_tmp)
     
     best_axis = protein.find_best_axis()
-    print("BEST AXIS BEFORE ADJUSTING IS ", best_axis)    
+    print("Best axis found is", best_axis)    
     
-    print("OPTIMISING MEMBRANE WIDTH...")
-    #print("WIDTH WAS", abs(best_axis.plane1.d - best_axis.plane2.d))
+    print("Optimising mebrane width...")
 
     # Adjusting bottom plane above   
     best_axis_tmp = optimizing_width_membrane(axis_init=best_axis, gap_membrane=gap_membrane, plane_to_consider=2, 
@@ -97,8 +96,8 @@ if __name__ == '__main__':
     # Adjusting upper plane below        
     best_axis_tmp4 = optimizing_width_membrane(axis_init=best_axis_tmp3, gap_membrane=-gap_membrane, plane_to_consider=1, 
                               amino_acid_sequence=protein.amino_acid_sequence)
-    print("WIDTH IS", abs(best_axis_tmp4.plane1.d - best_axis_tmp4.plane2.d))
-    print("BEST AXIS OVERALL", best_axis_tmp4)
+    print("The membrane width is ", abs(best_axis_tmp4.plane1.d - best_axis_tmp4.plane2.d))
+    print("Best axis found overall is", best_axis_tmp4)
     print("Writing the TM segments in ../results/")
     best_axis_tmp4.find_tm_segment(protein)
     print("Visualising in PyMol")

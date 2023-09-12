@@ -53,7 +53,7 @@ class Point:
 
     def __str__(self):
         """Redifining print() comportement."""
-        return f"Point({self.coordinates[0]},{self.coordinates[1]},{self.coordinates[2]})"
+        return f"Point({self.coordinates[0]:.3f},{self.coordinates[1]:.3f},{self.coordinates[2]:.3f})"
 
     def dot_product(self, normal):
         return -self.coordinates.dot(normal.get_coordinates())
@@ -111,7 +111,7 @@ class Plane:
 
     def __str__(self):
         """Redifining print() comportement."""
-        return f"{self.a:.3f}x + {self.b:.3f}y +{self.c:.3f}z + {self.d:.3f} = 0\n"
+        return f"{self.a:.3f}x + {self.b:.3f}y +{self.c:.3f}z + {self.d:.3f} = 0"
 
     def complementary(self, gap):
         """ Generates a plan parallel under slided from a certain gap."""        
@@ -186,7 +186,7 @@ class Axis:
 
     def __str__(self):
         """Redifining print() comportement."""
-        return f"AXIS with best hydro : {self.best_hydrophobicity}, {self.plane1}, {self.plane2}"
+        return f"AXIS with best hydro : {self.best_hydrophobicity}, {self.plane1} \t {self.plane2}"
     
     def explore_axe(self, amino_acid_sequence, ref): #axis de ref avec les meilleurs métriques obtenues
         """

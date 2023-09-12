@@ -205,6 +205,7 @@ def parse_pdb(input_file,chain):
     protein.compute_mass_center(chain_selected)
     print("Mass center is", protein.mass_center)
 
+    print("Constructing and adding residues to protein...")
     # Creating the residues of the protein:
     for residue in chain_selected:
         if residue.has_id("CA"):
