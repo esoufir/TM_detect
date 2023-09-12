@@ -54,7 +54,7 @@ For instance, the following command :
 python TM_detect.py ../data/1prn.pdb -n 15 -w 14.0 -g 1.0 -m 1.0
 ```
 gives the output : 
-![Example](http://url/to/img.png)
+![Example](https://github.com/esoufir/TM_detect/blob/main/results/example_1prn.png)
 
 An output file is also generated in the folder `./results/`. It gives information on the transmembrane segments. For example : 
 
