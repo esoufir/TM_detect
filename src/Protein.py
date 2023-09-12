@@ -305,7 +305,7 @@ def show_in_pymol(plane1, plane2, pdb_file, mass_center):
     for idx, point in enumerate(points_on_plane2):
         x, y, z = point
         atom_name = f"plane2_{idx}"
-        pymol.cmd.pseudoatom(atom_name, pos=[x, y, z], color="yellow")
+        pymol.cmd.pseudoatom(atom_name, pos=[x, y, z], color="blue")
         pymol.cmd.show("spheres", f"plane2_{idx}")
 
     # Mass center

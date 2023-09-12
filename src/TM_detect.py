@@ -15,7 +15,7 @@ if __name__ == '__main__':
     parser.add_argument('filename', help="A PDB file")
     
     # Optionnal arguments :
-    parser.add_argument('-n', help = "Number of points to place on the sphere. (default is 15)", type=int, dest = "n", default = 15)
+    parser.add_argument('-n', help = "Number of points to place on the sphere. (default is 15)", type=int, dest = "n", default = 15) 
     parser.add_argument('-w', help = "Initial width of the membrane. (default is 14 A)", type=float, dest = "width", default = 14) 
     parser.add_argument('-g', help = "Gap of sliding membrane along an axis. (default is 1 A)", type=float, dest = "gap", default = 1) 
     parser.add_argument('-m', help = "Gap of optimising membrane's width. (default is 1 A)", type=float, dest = "gap_membrane",default = 1) 
@@ -60,7 +60,7 @@ if __name__ == '__main__':
         best_axis_tmp =  copy.deepcopy(axis)
         
         # Looking above : 
-        while axis.explore_axe(protein.amino_acid_sequence,ref = best_axis_tmp) == True : 
+        while axis.explore_axe(protein.amino_acid_sequence,ref = best_axis_tmp) is True : 
             # Sliding the planes if necessary
             axis.plane1.slide_plane(gap)
             axis.plane2.slide_plane(gap)         
