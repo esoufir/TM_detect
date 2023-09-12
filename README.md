@@ -7,26 +7,35 @@ TM_detect is a program which locates the membrane in a transmbrane protein and d
 
 ## Installation
 
-### Virtual environment
-
-You can use the virtual environment [TM_detect.yml](https://github.com/esoufir/TM_detect/blob/main/src/TM_detect.yml). 
-
 ### Dependencies
 
 This program uses the tool DSSP combine with BioPython. You can install it : 
 
 `sudo apt-get install dssp`
 
-This program also uses PyMol. Evrything is detailed in the virtual environment [TM_detect.yml](https://github.com/esoufir/TM_detect/blob/main/src/TM_detect.yml). 
+This program also uses PyMol. Evreything is detailed in the virtual environment [TM_detect.yml](https://github.com/esoufir/TM_detect/blob/main/src/TM_detect.yml). 
 
 
+Download the ZIP repository.   
+In a proper folder, unzip it.   
+Change your current directory into the root of the project.   
+```
+conda env create --prefix ./mypymolenv --file src/TM_detect.yml
+conda activate mypymolenv
+```
+
+
+
+### Virtual environment
+
+You can use the virtual environment [TM_detect.yml](https://github.com/esoufir/TM_detect/blob/main/src/TM_detect.yml). 
 
 
 ## Usage
 
-When in the `./src/` folder, run the following command : 
+After activating the virtual environment and when in the `./src/` folder, run the following command : 
 ```
-python TM_detect [-h] [-n N] [-w WIDTH] [-g GAP] [-m GAP_MEMBRANE] filename
+python TM_detect [-h] [-n N] [-w WIDTH] [-g GAP] [-m GAP_MEMBRANE] path/to/filename
 
 positional arguments:
   filename         A PDB file
@@ -42,9 +51,28 @@ You can use some data examples located in the folder `./data/` :
 
 For instance, the following command : 
 ```
-python TM_detect.py ../data/1k24.pdb -n 15 -w 14 -g 1 -m 1
+python TM_detect.py ../data/1prn.pdb -n 15 -w 14.0 -g 1.0 -m 1.0
 ```
 gives the output : 
+![Example](http://url/to/img.png)
+
+An output file is also generated in the folder `./results/`. It gives information on the transmembrane segments. For example : 
+
+``` 
+Transmembrane segment from residue 10 to 10
+Transmembrane segment from residue 12 to 12
+Transmembrane segment from residue 27 to 27
+Transmembrane segment from residue 31 to 31
+Transmembrane segment from residue 33 to 33
+Transmembrane segment from residue 51 to 51
+Transmembrane segment from residue 53 to 53
+Transmembrane segment from residue 55 to 55
+Transmembrane segment from residue 61 to 66
+Transmembrane segment from residue 68 to 69
+...
+
+```
+
 
 
 ## Structure
