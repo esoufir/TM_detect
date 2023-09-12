@@ -22,9 +22,6 @@ class Vector:
     def get_z(self):
         return self.coordinates[2]
 
-    def norma(self):
-        return math.sqrt(self.x ** 2 + self.y ** 2 + self.z ** 2)
-
 
 class Point:
     def __init__(self, x, y, z):
@@ -74,29 +71,46 @@ class Plane:
         self.d += sliding_window
 
     # http://mathonline.wikidot.com/point-normal-form-of-a-plane
-    # TODO: Ces 2 fonctions
+
     def is_above(self, point):
-        # Return true if the point is located over the plane (self)
+        """
+        Returns a bool indicating whether a point is above a plane. 
+
+        Parameters
+        ----------
+        point : Point
+            The point to check the location. 
+
+        Returns
+        -------
+        bool
+            If the point is above the plane (self)
+        """
         return True if (
                                    self.a * point.get_x() + self.b * point.get_y() + self.c * point.get_z() + self.d) > 0 else False
 
     def is_below(self, point):
-        # Return true if the point is located under the plane (self)
+        """
+        Returns a bool indicating whether a point is below a plane. 
 
+        Parameters
+        ----------
+        point : Point
+            The point to check the location. 
+
+        Returns
+        -------
+        bool
+            If the point is below the plane (self)
+        """
         return True if (
                                    self.a * point.get_x() + self.b * point.get_y() + self.c * point.get_z() + self.d) < 0 else False
 
-
-    def is_in(self,point):
-        # Return True if point is in the plane self
-        return True if self.a * point.get_x() +self.b * point.get_y() + self.c * point.get_z() + self.d == 0  else False
-
-# TODO : Error handling
 class Axis:
     def __init__(self, p1, p2):
-        self.plane1 = p1 # deep copy ?
+        self.plane1 = p1
         self.plane2 = p2
-        self.best_hydrophobicity = -1000 #TODO: moauis
+        self.best_hydrophobicity = -1000 # Low hydrophobicity, can only be improved
 
     def __str__(self):
         return f"AXIS with best hydro : {self.best_hydrophobicity}, {self.plane1}, {self.plane2}"
@@ -137,7 +151,7 @@ class Axis:
         #hydrophobicity, n_hits, n_total = compute_relative_hydrophobicity(in_between_planes)
         hydrophobicity = (nb_hydrophile_out_of_plan/n_total_hydrophile) + (n_hydrophobe_in_plan/n_total_hydrophobic)
         #print(f"Hit ratio {number_atoms_hits} \t {number_atoms_in_between} = {number_atoms_hits/number_atoms_in_between}")
-
+        print("HYDROPHOBICITY", hydrophobicity)
         if  hydrophobicity > ref.best_hydrophobicity :
             # Updating the "best" match
             ref.best_hydrophobicity = hydrophobicity
@@ -200,27 +214,25 @@ class Axis:
             return False
     
 
-    def find_tm_segment(self, amino_acid_sequence):
-        with open("../results/results_tm_segments.txt", "w") as f_out: #TODO : Adpat name output
-            in_between_planes = []
-            for aa in (amino_acid_sequence):
+    def find_tm_segment(self, protein):
+        with open("../results/results_tm_segments_"+protein.name + ".txt", "w") as f_out:
+            in_between_planes = [] # List of residues contained between the two planes
+            for aa in (protein. amino_acid_sequence):
                 if (self.plane1.is_below(aa.point) and self.plane2.is_above(aa.point)) or (self.plane2.is_below(
                         aa.point) and self.plane1.is_above(aa.point)):
                     in_between_planes.append(aa)
-            tm = []
             
-            
+            tm = [] # List of transmembranes segments
             for aa in in_between_planes:
                 if len(tm) ==0:
                     tm.append(aa.id)
                 else:
                     # Getting the last one added
                     last_added = tm[(len(tm)-1)]
-                    
                     if last_added + 1 == aa.id : 
                         tm.append(aa.id)
                     else : 
-                        # Writing in ab output file
+                        # Writing in the output file
                         f_out.write(f"Transmembrane segment from residue {min(tm)} to {max(tm)}\n")
                         tm = []
                         tm.append(aa.id)

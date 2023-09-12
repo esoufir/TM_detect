@@ -10,34 +10,47 @@ import sys
 
 
 class Protein:
+    """
+    A class to represent a Protein with one chain.
+
+    ...
+
+    Attributes
+    ----------
+    name : str
+        Name of the protein
+    mass_center : Point
+        Coordinates of the mass center
+    amino_acid_sequence : list <AminoAcid>
+        List of the amino acids accessible to solvant
+    full_sequence : list <AminoAcid>
+        Full sequence
+    best_positions : list <Axis>
+        List of every axis with its own best position 
+    
+    Methods
+    -------
+    find_best_axis():
+        Prints the person's name and age.
+    """
     def __init__(self, name):
         self.name = name
         self.mass_center = Vector.Point(0, 0, 0)
-        self.amino_acid_sequence = [] # Only the amino acid accessible to solvant
-        self.best_positions = []
-
-        self.full_sequence = [] # Full sequence
-        
-        self.x_max = 0
-        self.y_max = 0
-        self.z_max = 0
-
-        self.x_min = float('inf') # infini  
-        self.y_min = float('inf') 
-        self.z_min = float('inf') 
-
-    def get_amino_acid_sequence(self):
-        return self.amino_acid_sequence
-
-    def add_to_amino_acid_sequence(self, new_amino_acid):
-        self.amino_acid_sequence.append(new_amino_acid)
-
-    def set_mass_center(self, new_mass_center):
-        self.mass_center = new_mass_center
+        self.amino_acid_sequence = []
+        self.full_sequence = []
+        self.best_positions = [] 
 
     def find_best_axis(self):
+        """
+        Finds the best axis among the list self.best_positions. 
+        The best axis is the one with the best value of hydrophobicity. 
+
+        Returns
+        -------
+        best_axis : Axis
+            Axis with the highest value of hydrophobicity
+        """
         best_axis_val = 0
-        best_number_hits = 0
         best_axis = None
         for axis in self.best_positions:
             if axis.best_hydrophobicity > best_axis_val :
@@ -45,29 +58,46 @@ class Protein:
                 best_axis = copy.deepcopy(axis)
         return best_axis
 
+    def compute_mass_center(self,chain):
+        """
+        Compute the coordinates of the mass center.
+        
+        Parameters
+        ----------
+        chain : Chain (Bio.PDB)
+            More info to be displayed (default is None)
+        
+        Returns
+        -------
+        best_axis : Point
+            Coordinates of the mass center
+        """
+        result = chain.center_of_mass()
+        x, y, z = result[0], result[1], result[2]
+        return Vector.Point(x, y, z)
 
-# TODO: ? trouver avant les 4 points les plus éloignés et si on regarde dans des tranches en dehors de ces points =>
-#  break
 
-# TODO: Méthode qui calcule le centre de masse:,  a voir si on le calcule à la main ou pas et si on la met dans la
-#  classe protéine oupas
-def compute_mass_center(chain):
-    result = chain.center_of_mass()
-    x, y, z = result[0], result[1], result[2]
-    return x, y, z
-
-
-# A mettre ailleurs : 
 def check_input_file(input_file):
-    # TODO: Check extension, ...
-    with open(input_file, "r") as handle:
-        header_dict = parse_pdb_header(handle)
+    if not input_file.lower().endswith(".pdb"): 
+        print("Wrong extension. A PDB file is required.")
+        sys.exit(0)
+    try:
+        # Attempt to parse the PDB file
+        parser = PDBParser()
+        structure = parser.get_structure("temp", input_file)
+        # Check if the structure contains at least one chain labeled as "A"
+        for model in structure:
+            for chain in model:
+                if chain.id == 'A':
+                    return True    
+    except Exception as e:
+        print("Issue well attempting to read the PDB file. Please check the content of your input file.")
+        sys.exit(0)
 
 
 def caculate_solvant_accessibility(structure, input_file):
     # Using DSSP
     print("Computing solvant accessibility...")
-
     model = structure[0]
     dssp = DSSP(model, input_file, dssp='mkdssp')
     # Pour chaque acide aminé, on a ASA = Accessible Surface Area
@@ -75,13 +105,11 @@ def caculate_solvant_accessibility(structure, input_file):
 
 
 def parse_pdb(input_file):
-    # TODO: Parse the PDB File to get only one chain (pour le moment, cf extension) and get residues and atoms and
-    #  put them in objects
     print("Parsing the PDB file ...")
     p = PDBParser()
     # TODO: Adapt le X
     structure = p.get_structure("X", input_file)
-    # TODO :mieux subdiviser en fonctions
+    
     id_amino_acid = 1 # Counting the accessible residues
     id_full_amino_acid = 1 # Counting all residues
     protein = Protein(name=input_file[8:-4])
@@ -90,44 +118,49 @@ def parse_pdb(input_file):
     dssp_res = caculate_solvant_accessibility(structure, input_file=input_file)
     print("Trimming to get only exposed residues...")
     exposed_residues = []
-    # Getting only the residue id and its solvant accessibility
-    for res_id, _, _, asa, _, _, _, _, _,_,_,_,_,_ in dssp_res:
-        if asa > 0.3: # TODO : Adapt
+    # Getting only the residue id and its solvant accessibility (0.3)
+    i=0
+    for res_id, aa, bb, asa, _, _, _, _, _,_,_,_,_,_ in dssp_res:
+        if asa > 0.3: #TODO : Adapt
             exposed_residues.append(res_id)
+        i+=1
     
     print(f"Found {len(exposed_residues)} exposed residues.")
-    # Adapt with the condition of the exercise : 
-    for model in structure:
-        print(f"Found {len(model)} chains in structure...")# TODO : ADPAPT CHAIN
-        chain = model["A"] #TODO: default
-        xm, ym, zm = compute_mass_center(chain)
-        protein.mass_center = Vector.Point(xm, ym, zm)
-        for residue in chain:
-            if residue.has_id("CA"):
-                atom = residue['CA']
-                x, y, z = atom.get_coord()
-                # Creating and setting the AminoAcid object
-                new_amino_acid = AminoAcid(code=residue.get_resname(), id=id_full_amino_acid, x=x, y=y, z=z)
-                # Linking the amino acid to its protein object
-                protein.full_sequence.append((new_amino_acid))
-                id_full_amino_acid+=1
-                # If the residue is exposed, adding it to a dedicated list :
-                if residue.get_id()[1] in exposed_residues:
-                    if residue.has_id("CA"):
-                        atom = residue['CA']
-                        x, y, z = atom.get_coord()
-                        # Creating and setting the AminoAcid object
-                        new_amino_acid = AminoAcid(code=residue.get_resname(), id=id_amino_acid, x=x, y=y, z=z)
-                        # Linking the amino acid to its protein object
-                        protein.add_to_amino_acid_sequence(new_amino_acid=new_amino_acid)
-                        id_amino_acid += 1    
+    # TODO : Adapt with the condition of the exercise : 
+    model = structure[0]
+    print(f"Found {len(model)} chains in structure...")# TODO : ADPAPT CHAIN
+    chain = model["A"] #TODO: default
+    protein.compute_mass_center(chain)
+    for residue in chain:
+        if residue.has_id("CA"):
+            atom = residue['CA']
+            x, y, z = atom.get_coord()
+            # Creating and setting the AminoAcid object
+            new_amino_acid = AminoAcid(code=residue.get_resname(), id=residue.get_id()[1], x=x, y=y, z=z)
+            # Linking the amino acid to its protein object
+            protein.full_sequence.append((new_amino_acid))
+            id_full_amino_acid+=1
+            # If the residue is exposed, adding it to a dedicated list :
+            if residue.get_id()[1] in exposed_residues:
+                if residue.has_id("CA"):
+                    atom = residue['CA']
+                    x, y, z = atom.get_coord()
+                    # Creating and setting the AminoAcid object
+                    new_amino_acid = AminoAcid(code=residue.get_resname(), id=residue.get_id()[1], x=x, y=y, z=z)
+                    # Linking the amino acid to its protein object
+                    protein.amino_acid_sequence.append(new_amino_acid)
+                    id_amino_acid += 1    
     return protein
 
 
 def show_in_pymol(plane1, plane2, pdb_file, mass_center, point_x=None):
-    pymol.finish_launching()
+    # Run in quiet mode to avoid problem with argument parsing
+    pymol.finish_launching(['pymol', '-q'])
+    
     pymol.cmd.load(pdb_file, "protein")# TODO
+    pymol.cmd.split_chains(pdb_file)
     pymol.cmd.remove("solvent")
+   
     # Determine the dimensions of the molecule in the X-axis
     x_min, x_max = float("inf"), float("-inf")
     # Define the Y and Z range for the points
@@ -228,10 +261,7 @@ def optimizing_width_membrane(gap_membrane, axis_init,amino_acid_sequence, plane
     return best_axis
            
 
-# TODO :All the logging file https://docs.python.org/3/howto/logging.html
-
 if __name__ == '__main__':
-    # TODO: Compléter cela
     parser = argparse.ArgumentParser(
         prog='TM_detect.py',
         description='This programe locates the membrane in a transmbrane protein and detects transmebrane segments')
@@ -246,7 +276,6 @@ if __name__ == '__main__':
     
     # Parsing : 
     args = parser.parse_args()
-    print(args)
     filename= args.filename
     # Number of points
     n = args.n
@@ -258,11 +287,12 @@ if __name__ == '__main__':
     gap = args.gap
     # Size of the sliding window when optimizing membrane width
     gap_membrane = args.gap_membrane
-
-    # TODO: pbl avec Pymol apres
       
     # Sum-up command : 
-    print(f"Command : Protein.py {filename} -c {chain} -n {n} -w {width} -g {gap} -m {gap_membrane}")  # TODO change program name
+    print(f"Command : TM_detect.py {filename} -c {chain} -n {n} -w {width} -g {gap} -m {gap_membrane}")
+
+    # Some checks on the input file : 
+    check_input_file(filename)
 
     # Parsing the PDB file :
     protein = parse_pdb(filename)
@@ -282,14 +312,12 @@ if __name__ == '__main__':
 
         axis = Vector.Axis(p1=plane1, p2=plane2)
         best_axis_tmp =  copy.deepcopy(axis)
+        
         # Looking above : 
-        while axis.explore_axe(protein.amino_acid_sequence,ref = best_axis_tmp) == True :
-            # Keeping in mind the best axis found yet : 
-            
-            # TODO: Function to "reinitialize the axis by sliding the plane + resetting to 0 the matches"
+        while axis.explore_axe(protein.amino_acid_sequence,ref = best_axis_tmp) == True : 
             # Sliding the planes if necessary
             axis.plane1.slide_plane(gap)
-            axis.plane2.slide_plane(gap)  # TODO : adapte la gap je pense            
+            axis.plane2.slide_plane(gap)         
             
         #print("BEST AXIS AFTER ABOVE EXPLORATION", best_axis_tmp)
 
@@ -328,24 +356,12 @@ if __name__ == '__main__':
            
     print("WIDTH 1 IS", abs(best_axis_tmp.plane1.d - best_axis_tmp.plane2.d))
    
-         
-    """best_axis_tmp2 = copy.deepcopy(best_axis_tmp)
-    best_axis_tmp.plane2.slide_plane(-gap_mebrane)
-    while best_axis_tmp.explore_axe_bis(protein.amino_acid_sequence, ref =best_axis_tmp2 ): 
-            # Sliding the planes if necessary
-            best_axis_tmp.plane2.slide_plane(-gap_mebrane)"""
 
     # Adjusting bottom plane below        
     best_axis_tmp2 = optimizing_width_membrane(axis_init=best_axis_tmp, gap_membrane=-gap_membrane, plane_to_consider=2, 
                               amino_acid_sequence=protein.amino_acid_sequence)
     print("WIDTH 2 IS", abs(best_axis_tmp2.plane1.d - best_axis_tmp2.plane2.d))
         
-    """# best_axis_tmp is the best yet
-    best_axis_tmp3 = copy.deepcopy(best_axis_tmp2)
-    best_axis_tmp2.plane1.slide_plane(-gap_mebrane)
-    while best_axis_tmp2.explore_axe_bis(protein.amino_acid_sequence, ref =best_axis_tmp3 ): 
-            # Sliding the planes if necessary
-            best_axis_tmp2.plane1.slide_plane(-gap_mebrane)"""
     # Adjusting upper plane above        
     best_axis_tmp3 = optimizing_width_membrane(axis_init=best_axis_tmp2, gap_membrane=gap_membrane, plane_to_consider=1, 
                               amino_acid_sequence=protein.amino_acid_sequence)
@@ -363,8 +379,7 @@ if __name__ == '__main__':
     print("WIDTH IS", abs(best_axis_tmp4.plane1.d - best_axis_tmp4.plane2.d))
     print("BEST AXIS OVERALL", best_axis_tmp4)
     
-    # TODO : File output with the TM segments
-    best_axis_tmp4.find_tm_segment(protein.full_sequence)
+    best_axis_tmp4.find_tm_segment(protein)
 
     show_in_pymol(best_axis_tmp4.plane1,best_axis_tmp4.plane2, filename, mass_center=protein.mass_center)
     
