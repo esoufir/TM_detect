@@ -7,22 +7,26 @@ TM_detect is a program which locates the membrane in a transmbrane protein and d
 
 ## Installation
 
+### Virtual environment
+
+You can use the virtual environment [TM_detect.yml](https://github.com/esoufir/TM_detect/blob/main/src/TM_detect.yml). 
+
 ### Dependencies
 
 This program uses the tool DSSP combine with BioPython. You can install it : 
 
 `sudo apt-get install dssp`
 
-This program also uses PyMol. 
+This program also uses PyMol. Evrything is detailed in the virtual environment [TM_detect.yml](https://github.com/esoufir/TM_detect/blob/main/src/TM_detect.yml). 
 
-### Virtual environment
 
-You can use the virtual environment located [Link text Here](https://link-url-here.org). 
+
 
 ## Usage
 
+When in the `./src/` folder, run the following command : 
 ```
-TM_detect [-h] [-n N] [-w WIDTH] [-g GAP] [-m GAP_MEMBRANE] filename
+python TM_detect [-h] [-n N] [-w WIDTH] [-g GAP] [-m GAP_MEMBRANE] filename
 
 positional arguments:
   filename         A PDB file
@@ -34,6 +38,13 @@ optional arguments:
   -g GAP           Gap of sliding membrane along an axis. (default is 1 A)
   -m GAP_MEMBRANE  Gap of optimising membrane's width. (default is 1 A)
 ```
+You can use some data examples located in the folder `./data/` : 
+
+For instance, the following command : 
+```
+python TM_detect.py ../data/1k24.pdb -n 15 -w 14 -g 1 -m 1
+```
+gives the output : 
 
 
 ## Structure
