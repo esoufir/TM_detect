@@ -7,6 +7,22 @@ from Bio.PDB.DSSP import DSSP
 import matplotlib.pyplot as plt
 
 class Vector:
+    """
+    A class to represent a vector
+
+    ...
+
+    Attributes
+    ----------
+    coordinates : np.array
+        The 3D coordinates of the vector. 
+
+    Methods
+    -------
+    get_coordinates():
+        Getter
+    """
+
     def __init__(self, x, y, z):
         self.coordinates = np.array([x, y, z])
 
@@ -16,10 +32,27 @@ class Vector:
 
 
 class Point:
+    """
+    A class to represent a Point
+
+    ...
+
+    Attributes
+    ----------
+    coordinates : np.array
+        The 3D coordinates of the point. 
+
+    Methods
+    -------
+    get_coordinates():
+        Getter
+    """
+    
     def __init__(self, x, y, z):
         self.coordinates = np.array([x, y, z])
 
     def __str__(self):
+        """Redifining print() comportement."""
         return f"Point({self.coordinates[0]},{self.coordinates[1]},{self.coordinates[2]})"
 
     def dot_product(self, normal):
@@ -39,6 +72,34 @@ class Point:
 
 
 class Plane:
+    """
+    A class to represent a plane in a 3D space.
+
+    ...
+
+    Attributes
+    ----------
+    point : Point
+        Point on the plane. Used to define the plan with the normal vector.
+    normal : Vector
+        Vector normal of the plane. Used to define the plan with point. 
+    a : float
+        Constant in the cartesian equation. 
+    b : float
+        Constant in the cartesian equation. 
+    c : float
+        Constant in the cartesian equation. 
+    d : float
+        Constant in the cartesian equation. 
+    Methods
+    -------
+    complementary(gap):
+        Generates a plan parallel slided from a certain gap. 
+    is_above():
+        Getter
+    is_below():
+        Getter
+    """
     def __init__(self, point: Point, normal: Vector):
         self.point = point
         self.normal = normal
@@ -49,17 +110,18 @@ class Plane:
         self.d = -(self.a * self.point.get_x() + self.b * self.point.get_y() + self.c * self.point.get_z())  # https://mathworld.wolfram.com/Plane.html
 
     def __str__(self):
+        """Redifining print() comportement."""
         return f"{self.a:.3f}x + {self.b:.3f}y +{self.c:.3f}z + {self.d:.3f} = 0\n"
 
     def complementary(self, gap):
-        # gap in Angstrom
+        """ Generates a plan parallel under slided from a certain gap."""        
         # Copying the object
         complementary_plane = copy.deepcopy(self)
         complementary_plane.d = complementary_plane.d + gap
         return complementary_plane
 
     def slide_plane(self, sliding_window):
-        # slide the plane 
+        """Slide the plane according to a sliding_window value"""        
         self.d += sliding_window
 
     # http://mathonline.wikidot.com/point-normal-form-of-a-plane
@@ -99,12 +161,31 @@ class Plane:
                                    self.a * point.get_x() + self.b * point.get_y() + self.c * point.get_z() + self.d) < 0 else False
 
 class Axis:
+    """
+    A class to represent an Axis.
+
+    ...
+
+    Attributes
+    ----------
+    plane1 : Plane
+        The upper Plane. 
+    plane2 : Plane
+        The lower Plane.
+    best_hydrophobicity : float
+        Relative hydrophobicity between the two planes. 
+    Methods
+    -------
+    get_coordinates():
+        Getter
+    """
     def __init__(self, p1, p2):
         self.plane1 = p1
         self.plane2 = p2
         self.best_hydrophobicity = -1000 # Low hydrophobicity, can only be improved
 
     def __str__(self):
+        """Redifining print() comportement."""
         return f"AXIS with best hydro : {self.best_hydrophobicity}, {self.plane1}, {self.plane2}"
     
     def explore_axe(self, amino_acid_sequence, ref): #axis de ref avec les meilleurs métriques obtenues
@@ -151,7 +232,6 @@ class Axis:
         
         # When no more atoms between the two planes, exiting the function, we stop the exploring on this side of the axis
         if len(in_between_planes) == 0:
-            print("No more atoms in between")
             return (False)
         
         # Computing the relative hydrophobicity of the selected amino_acids : to maximise
@@ -165,8 +245,11 @@ class Axis:
 
 
     def explore_axe_bis(self, amino_acid_sequence,ref):
+        """
+        Similar to the upper fonction but returns False if the sliding does not improve hydriphobicity
+        and so stops exploration.  
+        """
         in_between_planes = []
-        number_atoms_in_between = 0 # en vrai sert à rien vu que c'est len de in_between_planes. 
         n_total_hydrophobic = 0 
         n_total_hydrophile = 0
         nb_hydrophile_out_of_plan = 0
@@ -174,13 +257,11 @@ class Axis:
         for aa in (amino_acid_sequence):
             if (self.plane1.is_below(aa.point) and self.plane2.is_above(aa.point)) or (self.plane2.is_below(
                     aa.point) and self.plane1.is_above(aa.point)):
-                number_atoms_in_between += 1
                 in_between_planes.append(aa)
             if aa.is_hydrophobic :
                 n_total_hydrophobic+=1
             else:
                 n_total_hydrophile+=1
-        number_atoms_in_between = len(in_between_planes)
 
         # Hydrophile atoms not in plane : 
         for aa in amino_acid_sequence: 
@@ -193,23 +274,13 @@ class Axis:
             if atom_in_plan.is_hydrophobic : 
                 n_hydrophobe_in_plan+=1
         # When no more atoms between the two planes, exiting the function, we stop the exploring on this side of the axis
-        if number_atoms_in_between == 0:
-            print("No more atoms in between")
+        if len(in_between_planes) == 0:
             return (False)
         
         # Computing the relative hydrophobicity of the selected amino_acids : to maximise
-        #hydrophobicity, n_hits, n_total = compute_relative_hydrophobicity(in_between_planes)
         hydrophobicity = (nb_hydrophile_out_of_plan/n_total_hydrophile) + (n_hydrophobe_in_plan/n_total_hydrophobic)
-        print("POL out of plan", nb_hydrophile_out_of_plan, "pol",n_total_hydrophile, "hydrophobe in plane",n_hydrophobe_in_plan, "tot hydro", n_total_hydrophobic)
-        print("HYDRo",hydrophobicity)
         if  hydrophobicity > ref.best_hydrophobicity :
             # Updating the "best" match
-            """print("NHITS was", ref.best_number_hits)
-            print("N_tot was", ref.best_number_aa)
-            print("HYDROPHOBICITY was",ref.best_hydrophobicity)"""
-            # COPIE GENERALE ?
-            #ref.best_number_hits = n_hits
-            #ref.best_number_aa = n_total
             ref.best_hydrophobicity = hydrophobicity
             ref.plane1 = copy.deepcopy(self.plane1)
             ref.plane2 = copy.deepcopy(self.plane2)
@@ -220,6 +291,18 @@ class Axis:
     
 
     def find_tm_segment(self, protein):
+        """
+        Find and write the Transmembrane segments in an output file. 
+        
+        Parameters
+        ----------
+        protein : Protein
+            Protein studied.
+        
+        Returns
+        -------
+        None
+        """
         with open("../results/results_tm_segments_"+protein.name + ".txt", "w") as f_out:
             in_between_planes = [] # List of residues contained between the two planes
             for aa in (protein. amino_acid_sequence):
@@ -243,6 +326,21 @@ class Axis:
                         tm.append(aa.id)
 
 def find_points(n_points, center_coordinates):
+    """
+    Generates points equally distributed on a demi sphere using staff and kuijlaars method. 
+        
+    Parameters
+    ----------
+    n_points : int
+        Number of points to generate. 
+    center_coordinates : Point
+        Coordinates of the mass center. 
+        
+    Returns
+    -------
+    points : List <Point>
+        A list of points equally distributed on a demi sphere. 
+    """
     points = []
     for k in range(1, n_points + 1):  # n-points pour éviter division par 0
         h = -1 + (2 * (k - 1) / (n_points - 1))
@@ -267,24 +365,6 @@ def find_director_vector(point: Point, center_coordinate: Point):
     return Vector(center_coordinate.get_x() - point.get_x(), center_coordinate.get_y() - point.get_y(),
                   center_coordinate.get_z() - point.get_z())
 
-def caculate_solvant_accessibility(structure, input_file):  # a voir pour identifier le bon aa
-    
-    # Using DSSP
-    print("Computing solvant accessibility...")
-    model = structure[0]
-    dssp = DSSP(model, input_file)
-    # Store ASA values for each residue
-    asa_values = {}
 
-    # Iterate over the residues in the structure
-    for residue in model.get_residues():
-        chain_id = residue.parent.id
-        residue_id = residue.id
-        key = (chain_id, residue_id)
-        if key in dssp:
-            asa_value = dssp[key][3]  # ASA value for the residue
-            asa_values[key] = asa_value
-    # Now, asa_values is a dictionary containing ASA values for each residue in the structure
-    return asa_values
 
 
