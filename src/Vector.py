@@ -82,13 +82,13 @@ class Plane:
 
     def is_below(self, point):
         # Return true if the point is located under the plane (self)
+
         return True if (
                                    self.a * point.get_x() + self.b * point.get_y() + self.c * point.get_z() + self.d) < 0 else False
 
 
     def is_in(self,point):
-        # Return Tru if point is in the plane self
-        print("IS IN VAL", self.a * point.get_x() +self.b * point.get_y() + self.c * point.get_z() + self.d)
+        # Return True if point is in the plane self
         return True if self.a * point.get_x() +self.b * point.get_y() + self.c * point.get_z() + self.d == 0  else False
 
 # TODO : Error handling
@@ -96,36 +96,27 @@ class Axis:
     def __init__(self, p1, p2):
         self.plane1 = p1 # deep copy ?
         self.plane2 = p2
-        self.best_number_hits = 0
-        self.best_number_aa = 0
-        self.best_ratio = 0
         self.best_hydrophobicity = -1000 #TODO: moauis
 
     def __str__(self):
         return f"AXIS with best hydro : {self.best_hydrophobicity}, {self.plane1}, {self.plane2}"
-
-    #TODO : Potenetiellemnt à mettre dans Protéine:
-
     
     def explore_axe(self, amino_acid_sequence, ref): #axis de ref avec les meilleurs métriques obtenues
         in_between_planes = []
-        number_atoms_in_between = 0 # en vrai sert à rien vu que c'est len de in_between_planes. 
         n_total_hydrophobic = 0 
         n_total_hydrophile = 0
         nb_hydrophile_out_of_plan = 0
         n_hydrophobe_in_plan = 0
         for aa in (amino_acid_sequence):
-            if (self.plane1.is_below(aa.point) and self.plane2.is_above(aa.point)) or (self.plane2.is_below(
-                    aa.point) and self.plane1.is_above(aa.point)):
-                number_atoms_in_between += 1
+            if (self.plane1.is_below(aa.point) and self.plane2.is_above(aa.point)):
                 in_between_planes.append(aa)
             if aa.is_hydrophobic :
                 n_total_hydrophobic+=1
             else:
                 n_total_hydrophile+=1
-
-        number_atoms_in_between = len(in_between_planes)
-
+        """for aa in in_between_planes:
+            print(aa.id, end ="+")
+        print()"""
         # Hydrophile atoms not in plane : 
         for aa in amino_acid_sequence: 
             # if the atom is not in between the planes : 
@@ -138,7 +129,7 @@ class Axis:
                 n_hydrophobe_in_plan+=1
         
         # When no more atoms between the two planes, exiting the function, we stop the exploring on this side of the axis
-        if number_atoms_in_between == 0:
+        if len(in_between_planes) == 0:
             print("No more atoms in between")
             return (False)
         
@@ -149,18 +140,9 @@ class Axis:
 
         if  hydrophobicity > ref.best_hydrophobicity :
             # Updating the "best" match
-            """print("NHITS was", ref.best_number_hits)
-            print("N_tot was", ref.best_number_aa)
-            print("HYDROPHOBICITY was",ref.best_hydrophobicity)"""
-            #ref.best_number_hits = n_hits
-            #ref.best_number_aa = n_total
             ref.best_hydrophobicity = hydrophobicity
             ref.plane1 = copy.deepcopy(self.plane1)
             ref.plane2 = copy.deepcopy(self.plane2)
-
-            """print("NHITS is", ref.best_number_hits)
-            print("N_tot is", ref.best_number_aa)
-            print("HYDROPHOBICITY is",ref.best_hydrophobicity)"""
         return (True) if len(in_between_planes) > 0 else (False)
 
 
@@ -180,7 +162,6 @@ class Axis:
                 n_total_hydrophobic+=1
             else:
                 n_total_hydrophile+=1
-
         number_atoms_in_between = len(in_between_planes)
 
         # Hydrophile atoms not in plane : 
@@ -220,13 +201,15 @@ class Axis:
     
 
     def find_tm_segment(self, amino_acid_sequence):
-        with open("../results/results_tm_segments.txt", "w") as f_out:
+        with open("../results/results_tm_segments.txt", "w") as f_out: #TODO : Adpat name output
             in_between_planes = []
             for aa in (amino_acid_sequence):
                 if (self.plane1.is_below(aa.point) and self.plane2.is_above(aa.point)) or (self.plane2.is_below(
                         aa.point) and self.plane1.is_above(aa.point)):
                     in_between_planes.append(aa)
             tm = []
+            
+            
             for aa in in_between_planes:
                 if len(tm) ==0:
                     tm.append(aa.id)
@@ -241,18 +224,6 @@ class Axis:
                         f_out.write(f"Transmembrane segment from residue {min(tm)} to {max(tm)}\n")
                         tm = []
                         tm.append(aa.id)
-
-            
-            
-
-def compute_relative_hydrophobicity(amino_acid_sequence):
-    relative_hydrophobicity = 0
-    for aa in amino_acid_sequence:
-        if aa.is_hydrophobic :
-            relative_hydrophobicity+=1
-    # Number of hits and number of atoms must be significant important #TODO > 10 ? pour éviter les 1/1 ratios
-    return (relative_hydrophobicity/len(amino_acid_sequence), relative_hydrophobicity, len(amino_acid_sequence))
-
 
 def find_points(n_points, center_coordinates):
     points = []
@@ -278,13 +249,6 @@ def find_director_vector(point: Point, center_coordinate: Point):
     # The normal vector of the plan
     return Vector(center_coordinate.get_x() - point.get_x(), center_coordinate.get_y() - point.get_y(),
                   center_coordinate.get_z() - point.get_z())
-
-
-def find_normal_plan(director_vector):
-    """Returns 2 normal vectors making a plan orthogonal to the director vector"""
-    x, y, z = director_vector
-    return (np.array([-y, x, 0]), np.array([-z, 0, x]))
-
 
 def caculate_solvant_accessibility(structure, input_file):  # a voir pour identifier le bon aa
     # Using DSSP
