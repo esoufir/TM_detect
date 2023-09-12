@@ -4,7 +4,7 @@ import numpy as np
 import pymol
 import copy
 
-import Vector
+import Geometry
 import sys
 from Protein import *
 
@@ -44,19 +44,19 @@ if __name__ == '__main__':
     protein = parse_pdb(filename, chain)
     
     # Generating the points on a demi-sphere
-    directions = Vector.find_points(n, protein.mass_center)
+    directions = Geometry.find_points(n, protein.mass_center)
     
     print("Calculating the planes... ")
     # For each direction...
     for d in directions:
         point = copy.deepcopy(d)
         # Find the normal vector
-        normal = Vector.find_director_vector(point=point, center_coordinate=protein.mass_center)
+        normal = Geometry.find_director_vector(point=point, center_coordinate=protein.mass_center)
         # Construction of the two planes representing the membrane : 
-        plane1 = Vector.Plane(point=point, normal=normal)
+        plane1 = Geometry.Plane(point=point, normal=normal)
         plane2 = plane1.complementary(width) 
 
-        axis = Vector.Axis(p1=plane1, p2=plane2)
+        axis = Geometry.Axis(p1=plane1, p2=plane2)
         best_axis_tmp =  copy.deepcopy(axis)
         
         # Looking above : 
@@ -66,9 +66,9 @@ if __name__ == '__main__':
             axis.plane2.slide_plane(gap)         
         
         # Resetting start positions
-        plane1 = Vector.Plane(point=point, normal=normal)
+        plane1 = Geometry.Plane(point=point, normal=normal)
         plane2 = plane1.complementary(width)
-        axis = Vector.Axis(p1=plane1, p2=plane2) # pas sure de si faut le remettre
+        axis = Geometry.Axis(p1=plane1, p2=plane2) # pas sure de si faut le remettre
 
         # Looking below :
         while axis.explore_axe(protein.amino_acid_sequence, ref = best_axis_tmp):
@@ -82,7 +82,7 @@ if __name__ == '__main__':
     best_axis = protein.find_best_axis()
     print("Best axis found is", best_axis)    
     
-    print("Optimising mebrane width...")
+    print("Optimising membrane width...")
 
     # Adjusting bottom plane above   
     best_axis_tmp = optimizing_width_membrane(axis_init=best_axis, gap_membrane=gap_membrane, plane_to_consider=2, 

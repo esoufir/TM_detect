@@ -4,7 +4,7 @@ import numpy as np
 import pymol
 import copy
 
-import Vector
+import Geometry
 import sys
 
 
@@ -40,7 +40,7 @@ class AminoAcid:
         self.is_hydrophobic = False
         if self.code in AminoAcid.hydrophobics_amino_acids:
             self.is_hydrophobic = True
-        self.point = Vector.Point(x, y, z)
+        self.point = Geometry.Point(x, y, z)
 
     def __str__(self):
         """Redifining print() comportement."""
@@ -75,7 +75,7 @@ class Protein:
 
     def __init__(self, name):
         self.name = name
-        self.mass_center = Vector.Point(0, 0, 0)
+        self.mass_center = Geometry.Point(0, 0, 0)
         self.amino_acid_sequence = []
         self.full_sequence = []
         self.best_positions = []
@@ -114,7 +114,7 @@ class Protein:
         """
         result = chain.center_of_mass()
         x, y, z = result[0], result[1], result[2]
-        self.mass_center = Vector.Point(x, y, z)
+        self.mass_center = Geometry.Point(x, y, z)
 
 
 def check_input_file(input_file):

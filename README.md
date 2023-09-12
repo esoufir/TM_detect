@@ -1,18 +1,29 @@
-SOUFIR Emma M2BI - 2023/2024
+SOUFIR Emma M2BI - 2023/2024  
 Projet court - Assignation et détection des parties transmembranaires d'une protéine
 
 # TM_detect
 
-TM_detect is a programe which locates the membrane in a transmbrane protein and detects transmebrane segments. 
+TM_detect is a program which locates the membrane in a transmbrane protein and detects transmebrane segments. 
 
-## Dependencies
+## Installation
 
-This program uses the tool DSSP. You can install it : 
+### Dependencies
 
+This program uses the tool DSSP combine with BioPython. You can install it : 
+
+`sudo apt-get install dssp`
+
+This program also uses PyMol. 
+
+### Virtual environment
+
+You can use the virtual environment located [Link text Here](https://link-url-here.org). 
 
 ## Usage
 
-```TM_detect [-h] [-n N] [-w WIDTH] [-g GAP] [-m GAP_MEMBRANE] filename
+```
+TM_detect [-h] [-n N] [-w WIDTH] [-g GAP] [-m GAP_MEMBRANE] filename
+
 positional arguments:
   filename         A PDB file
 
@@ -25,9 +36,8 @@ optional arguments:
 ```
 
 
-## Algorithm
-
-
 ## Structure
-
+The source code is located in the `./src/` folder. 
 This program is implemented using the OOP paradigm. 
+The files [Protein.py](https://github.com/esoufir/TM_detect/blob/main/src/Protein.py) and [Geometry.py](https://github.com/esoufir/TM_detect/blob/main/src/Geometry.py) contain the classes. 
+The file [TM_detect.py](https://github.com/esoufir/TM_detect/blob/main/src/TM_detect.py) contains the main instructions of the program. 
