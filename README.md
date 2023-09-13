@@ -27,7 +27,7 @@ drwxr-xr-x 3 emmas emmas   4096 Sep 13 10:47  src/
 
 Then, load and activate the virtual environment [environment.yml](https://github.com/esoufir/TM_detect/blob/main/environment.yml) :
 ```
-conda env create --prefix ./mypymolenv --file src/TM_detect.yml
+conda env create --file environment.yml
 conda activate mypymolenv
 ```
 
