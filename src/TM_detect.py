@@ -44,7 +44,7 @@ if __name__ == '__main__':
     protein = parse_pdb(filename, chain)
     
     # Generating the points on a demi-sphere
-    directions = Geometry.find_points(n, protein.mass_center)
+    directions = Geometry.find_points(2 *n, protein.mass_center)
     
     print("Calculating the planes... ")
     # For each direction...
@@ -64,6 +64,7 @@ if __name__ == '__main__':
             # Sliding the planes if necessary
             axis.plane1.slide_plane(gap)
             axis.plane2.slide_plane(gap)         
+        
         
         # Resetting start positions
         plane1 = Geometry.Plane(point=point, normal=normal)

@@ -185,7 +185,7 @@ class Axis:
         self.plane1 = p1
         self.plane2 = p2
         self.best_hydrophobicity = -1000 # Low hydrophobicity, can only be improved
-
+        self.best_ratio_of_atoms = 0
     def __str__(self):
         """Redifining print() comportement."""
         return f"AXIS with best hydro : {self.best_hydrophobicity:.3f}, \
@@ -240,8 +240,9 @@ class Axis:
         
         # Computing the relative hydrophobicity of the selected amino_acids : to maximise
         hydrophobicity = (nb_hydrophile_out_of_plan/n_total_hydrophile)+(n_hydrophobe_in_plan/n_total_hydrophobic)
-        if  hydrophobicity > ref.best_hydrophobicity :
+        if  hydrophobicity > ref.best_hydrophobicity and len(in_between_planes)> ref.best_ratio_of_atoms:
             # Updating the "best" match
+            ref.best_ratio_of_atoms = len(in_between_planes)
             ref.best_hydrophobicity = hydrophobicity
             ref.plane1 = copy.deepcopy(self.plane1)
             ref.plane2 = copy.deepcopy(self.plane2)
@@ -283,8 +284,9 @@ class Axis:
         
         # Computing the relative hydrophobicity of the selected amino_acids : to maximise
         hydrophobicity = (nb_hydrophile_out_of_plan/n_total_hydrophile) + (n_hydrophobe_in_plan/n_total_hydrophobic)
-        if  hydrophobicity > ref.best_hydrophobicity :
+        if  hydrophobicity > ref.best_hydrophobicity  or  len(in_between_planes) > ref.best_ratio_of_atoms:
             # Updating the "best" match
+            ref.best_ratio_of_atoms = len(in_between_planes)
             ref.best_hydrophobicity = hydrophobicity
             ref.plane1 = copy.deepcopy(self.plane1)
             ref.plane2 = copy.deepcopy(self.plane2)
