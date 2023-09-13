@@ -37,7 +37,7 @@ conda activate mypymolenv
 
 You can use the virtual environment [environment.yml](https://github.com/esoufir/TM_detect/blob/main/environment.yml). 
 This program uses the tool DSSP and PyMol. Everything is detailed in the virtual environment [environment.yml](https://github.com/esoufir/TM_detect/blob/main/environment.yml).
-Another environment using pymol-open-source is available [environment_open_source.yml](https://github.com/esoufir/TM_detect/blob/main/environment_open_source.yml). 
+Another environment using pymol-open-source is available [environment-open-source.yml](https://github.com/esoufir/TM_detect/blob/main/environment-open-source.yml). 
 
 ```
 conda env create --file environment_open_source.yml
