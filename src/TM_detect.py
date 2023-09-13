@@ -8,6 +8,25 @@ import Geometry
 import sys
 from Protein import *
 
+
+
+"""
+TM_detect is a program which locates the membrane in a transmbrane protein and detects transmebrane segments. 
+
+Usage :
+python src/TM_detect.py [-h] [-n N] [-w WIDTH] [-g GAP] [-m GAP_MEMBRANE] path/to/filename
+
+positional arguments:
+  filename         A PDB file
+
+optional arguments:
+  -h, --help       show this help message and exit
+  -n N             Number of points to place on the sphere. (default is 15)
+  -w WIDTH         Initial width of the membrane. (default is 14 A)
+  -g GAP           Gap of sliding membrane along an axis. (default is 1 A)
+  -m GAP_MEMBRANE  Gap of optimising membrane's width. (default is 1 A)
+"""
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         prog='TM_detect',

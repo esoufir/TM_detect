@@ -251,9 +251,6 @@ def show_in_pymol(plane1, plane2, pdb_file, mass_center):
     pymol.cmd.load(pdb_file, "protein")
     pymol.cmd.remove("solvent")
 
-    
-
-
     # Determine the dimensions of the molecule in the X-axis
     x_min, x_max = float("inf"), float("-inf")
     for atom in pymol.cmd.get_model("protein").atom:
@@ -305,7 +302,7 @@ def show_in_pymol(plane1, plane2, pdb_file, mass_center):
         pymol.cmd.pseudoatom(atom_name, pos=[x, y, z], color="yellow")
         pymol.cmd.show("spheres", f"plane2_{idx}")
 
-    # Outputting in a PDB output file :
+    # Outputting the planes coordinates in a PDB output file :
     name = pdb_file[-8:]
     name = name[:-4]
     with open("output"+name+".xyz", "w") as f_output_coordinates:
@@ -325,6 +322,8 @@ def show_in_pymol(plane1, plane2, pdb_file, mass_center):
 
     # Show the protein structure
     pymol.cmd.show("cartoon", "protein")
+    # Saving the whole to a pdb file
+    pymol.cmd.save("output_"+name+".pse")
 
 
     
