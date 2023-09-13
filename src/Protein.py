@@ -24,12 +24,6 @@ class AminoAcid:
         
     point : Point
         Coordinates of the c-alpha
-
-    
-    Methods
-    -------
-    find_best_axis():
-        Prints the person's name and age.
     """
 
     hydrophobics_amino_acids = ['PHE', 'GLY', 'ILE', 'LEU', 'MET', 'VAL', 'TRP', 'TYR']
