@@ -50,8 +50,7 @@ class Point:
 
     def __str__(self):
         """Redifining print() comportement."""
-        return f"Point({self.coordinates[0]:.3f},\
-            {self.coordinates[1]:.3f},{self.coordinates[2]:.3f})"
+        return f"Point({self.coordinates[0]:.3f}, {self.coordinates[1]:.3f},{self.coordinates[2]:.3f})"
 
     def get_x(self):
         """Getter"""

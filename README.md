@@ -9,16 +9,23 @@ TM_detect is a program which locates the membrane in a transmbrane protein and d
 
 ### Dependencies
 
-This program uses the tool DSSP combine with BioPython. You can install it : 
-
-`sudo apt-get install dssp`
-
-This program also uses PyMol. Evreything is detailed in the virtual environment [environment.yml](https://github.com/esoufir/TM_detect/blob/main/environment.yml). 
-
 
 Download the ZIP repository.   
-In a proper folder, unzip it.   
-Change your current directory into the root of the project.   
+In a proper folder, unzip it.  
+
+Change your current directory to the root of the project. The `ls -l` command should give you : 
+
+```
+-rw-r--r-- 1 emmas emmas   2800 Sep 13 11:15  README.md
+-rw-r--r-- 1 emmas emmas 445283 Sep 13  2023  SOUFIR_Emma_Rapport_projet_court.pdf
+drwxr-xr-x 2 emmas emmas   4096 Sep 13 09:17  data/
+drwxr-xr-x 2 emmas emmas   4096 Sep  4 17:23  doc/
+-rw-r--r-- 1 emmas emmas   2675 Sep 13 10:50  environment.yml
+drwxr-xr-x 2 emmas emmas   4096 Sep 13 10:13  results/
+drwxr-xr-x 3 emmas emmas   4096 Sep 13 10:47  src/
+```
+
+Then, load and activate the virtual environment [environment.yml](https://github.com/esoufir/TM_detect/blob/main/environment.yml) :
 ```
 conda env create --prefix ./mypymolenv --file src/TM_detect.yml
 conda activate mypymolenv
@@ -29,13 +36,13 @@ conda activate mypymolenv
 ### Virtual environment
 
 You can use the virtual environment [environment.yml](https://github.com/esoufir/TM_detect/blob/main/environment.yml). 
-
+This program uses the tool DSSP and PyMol. Everything is detailed in the virtual environment [environment.yml](https://github.com/esoufir/TM_detect/blob/main/environment.yml). 
 
 ## Usage
 
-After activating the virtual environment and when in the `./src/` folder, run the following command : 
+After activating the virtual environment, run the following command : 
 ```
-python TM_detect [-h] [-n N] [-w WIDTH] [-g GAP] [-m GAP_MEMBRANE] path/to/filename
+python src/TM_detect.py [-h] [-n N] [-w WIDTH] [-g GAP] [-m GAP_MEMBRANE] path/to/filename
 
 positional arguments:
   filename         A PDB file
@@ -51,12 +58,12 @@ You can use some data examples located in the folder `./data/` :
 
 For instance, the following command : 
 ```
-python TM_detect.py ../data/1prn.pdb -n 15 -w 14.0 -g 1.0 -m 1.0
+python src/TM_detect.py data/1prn.pdb -n 15 -w 14.0 -g 1.0 -m 1.0
 ```
-gives the output : 
+opens PyMol GUI and gives the output : 
 ![Example](https://github.com/esoufir/TM_detect/blob/main/results/example_1prn.png)
 
-An output file is also generated. It gives the coordinates of the planes representing the membrane. For example : 
+An output file is also generated at the root of the project. It gives the coordinates of the planes representing the membrane. For example : 
 
 ``` 
 CA	 -24.43600082397461	 14.550000190734863	 19.768967474151072
@@ -67,12 +74,12 @@ CA	 -24.43600082397461	 26.550000190734863	 23.273038565385363
 CA	 -24.43600082397461	 29.550000190734863	 24.149056338193937
 CA	 -24.43600082397461	 32.55000019073486	 25.02507411100251
 ...
-...
+```
 
-
-
+You can find some examples of outputs in the `results/` folder, where the script was used on the `data/` files with default arguments. 
 
 ## Structure
+
 The source code is located in the `./src/` folder. 
 This program is implemented using the OOP paradigm. 
 The files [Protein.py](https://github.com/esoufir/TM_detect/blob/main/src/Protein.py) and [Geometry.py](https://github.com/esoufir/TM_detect/blob/main/src/Geometry.py) contain the classes. 
