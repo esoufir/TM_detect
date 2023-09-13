@@ -1,0 +1,14 @@
+name: mypymolenv
+channels:
+  - schrodinger
+  - salilab
+  - bioconda
+  - dsdale24
+  - conda-forge
+  - defaults
+dependencies:
+  - biopython=1.81
+  - dssp=3.0
+  - numpy=1.21
+  - pymol-open-source
+  - python=3.8
