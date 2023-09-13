@@ -56,22 +56,19 @@ python TM_detect.py ../data/1prn.pdb -n 15 -w 14.0 -g 1.0 -m 1.0
 gives the output : 
 ![Example](https://github.com/esoufir/TM_detect/blob/main/results/example_1prn.png)
 
-An output file is also generated in the folder `./results/`. It gives information on the transmembrane segments. For example : 
+An output file is also generated. It gives the coordinates of the planes representing the membrane. For example : 
 
 ``` 
-Transmembrane segment from residue 10 to 10
-Transmembrane segment from residue 12 to 12
-Transmembrane segment from residue 27 to 27
-Transmembrane segment from residue 31 to 31
-Transmembrane segment from residue 33 to 33
-Transmembrane segment from residue 51 to 51
-Transmembrane segment from residue 53 to 53
-Transmembrane segment from residue 55 to 55
-Transmembrane segment from residue 61 to 66
-Transmembrane segment from residue 68 to 69
+CA	 -24.43600082397461	 14.550000190734863	 19.768967474151072
+CA	 -24.43600082397461	 17.550000190734863	 20.644985246959646
+CA	 -24.43600082397461	 20.550000190734863	 21.52100301976822
+CA	 -24.43600082397461	 23.550000190734863	 22.397020792576793
+CA	 -24.43600082397461	 26.550000190734863	 23.273038565385363
+CA	 -24.43600082397461	 29.550000190734863	 24.149056338193937
+CA	 -24.43600082397461	 32.55000019073486	 25.02507411100251
+...
 ...
 
-```
 
 
 

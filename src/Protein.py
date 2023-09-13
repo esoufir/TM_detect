@@ -181,13 +181,16 @@ def parse_pdb(input_file,chain):
 
     id_amino_acid = 1  # Counting the accessible residues
     id_full_amino_acid = 1  # Counting all residues
-    protein = Protein(name=input_file[8:-4])
+    # Parsing the name
+    name = input_file[-8:]
+    name = name[:-4]
+    protein = Protein(name=name)
     # Compute the solvant accessibility and set it for each amino acid of the protein
     dssp_res = caculate_solvant_accessibility(structure, input_file=input_file)
     print("Trimming to get only exposed residues...")
     exposed_residues = []
     # Getting only the residue id and its solvant accessibility (0.3)
-    for res_id, aa, bb, asa, _, _, _, _, _, _, _, _, _, _ in dssp_res:
+    for res_id, _, _, asa, _, _, _, _, _, _, _, _, _, _ in dssp_res:
         if asa > 0.3:
             exposed_residues.append(res_id)
     print(f"Found {len(exposed_residues)} exposed residues.")
@@ -248,6 +251,9 @@ def show_in_pymol(plane1, plane2, pdb_file, mass_center):
     pymol.cmd.load(pdb_file, "protein")
     pymol.cmd.remove("solvent")
 
+    
+
+
     # Determine the dimensions of the molecule in the X-axis
     x_min, x_max = float("inf"), float("-inf")
     for atom in pymol.cmd.get_model("protein").atom:
@@ -266,15 +272,12 @@ def show_in_pymol(plane1, plane2, pdb_file, mass_center):
         if y > y_max:
             y_max = y
 
-    # If point_x is not provided, use the midpoint between x_min and x_max
-    center_x = (x_min + x_max) / 2.0
-
     # Define the step size for sampling points
     step = 3
     
     # Generate points on plane 1
     points_on_plane1 = []
-    for x in np.arange(center_x - (x_max - x_min) / 2, center_x + (x_max - x_min) / 2 + step, step):
+    for x in np.arange(x_min, x_max + step, step):
         for y in np.arange(y_min, y_max + step, step):
             # Calculate z coordinate using the plane equation for plane 1
             z1 = (-plane1.a * x - plane1.b * y - plane1.d) / plane1.c
@@ -299,8 +302,19 @@ def show_in_pymol(plane1, plane2, pdb_file, mass_center):
     for idx, point in enumerate(points_on_plane2):
         x, y, z = point
         atom_name = f"plane2_{idx}"
-        pymol.cmd.pseudoatom(atom_name, pos=[x, y, z], color="blue")
+        pymol.cmd.pseudoatom(atom_name, pos=[x, y, z], color="yellow")
         pymol.cmd.show("spheres", f"plane2_{idx}")
+
+    # Outputting in a PDB output file :
+    name = pdb_file[-8:]
+    name = name[:-4]
+    with open("output"+name+".xyz", "w") as f_output_coordinates:
+        for p in points_on_plane1:
+            x, y, z = p
+            f_output_coordinates.write("%s\t %s\t %s\t %s\n" % ("CA", x, y, z))
+        for p in points_on_plane2:
+            x, y, z = p
+            f_output_coordinates.write("%s\t %s\t %s\t %s\n" % ("CA", x, y, z))
 
     # Mass center
     if mass_center is not None:
@@ -312,6 +326,8 @@ def show_in_pymol(plane1, plane2, pdb_file, mass_center):
     # Show the protein structure
     pymol.cmd.show("cartoon", "protein")
 
+
+    
 
 def optimizing_width_membrane(gap_membrane, axis_init, amino_acid_sequence,
                               plane_to_consider):  # plane to consider is plane1 or plane 2

@@ -65,7 +65,6 @@ if __name__ == '__main__':
             axis.plane1.slide_plane(gap)
             axis.plane2.slide_plane(gap)         
         
-        
         # Resetting start positions
         plane1 = Geometry.Plane(point=point, normal=normal)
         plane2 = plane1.complementary(width)
@@ -82,6 +81,9 @@ if __name__ == '__main__':
     
     best_axis = protein.find_best_axis()
     print("Best axis found is", best_axis)    
+    if best_axis is None:
+        print("Something went wrong... Try to modify the values of paramters.")
+        sys.exit(1)
     
     print("Optimising membrane width...")
 
@@ -99,8 +101,6 @@ if __name__ == '__main__':
                               amino_acid_sequence=protein.amino_acid_sequence)
     print("The membrane width is ", abs(best_axis_tmp4.plane1.d - best_axis_tmp4.plane2.d))
     print("Best axis found overall is", best_axis_tmp4)
-    print("Writing the TM segments in ../results/")
-    best_axis_tmp4.find_tm_segment(protein)
     print("Visualising in PyMol")
     show_in_pymol(best_axis_tmp4.plane1,best_axis_tmp4.plane2, filename, mass_center=protein.mass_center)
     

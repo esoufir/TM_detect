@@ -240,7 +240,7 @@ class Axis:
         
         # Computing the relative hydrophobicity of the selected amino_acids : to maximise
         hydrophobicity = (nb_hydrophile_out_of_plan/n_total_hydrophile)+(n_hydrophobe_in_plan/n_total_hydrophobic)
-        if  hydrophobicity > ref.best_hydrophobicity and len(in_between_planes)> ref.best_ratio_of_atoms:
+        if  hydrophobicity > ref.best_hydrophobicity : #checker p)lutot le nombre d'atomes hydrophobes si il est amélioré => meilleur : and len(in_between_planes)> ref.best_ratio_of_atoms
             # Updating the "best" match
             ref.best_ratio_of_atoms = len(in_between_planes)
             ref.best_hydrophobicity = hydrophobicity
@@ -284,7 +284,7 @@ class Axis:
         
         # Computing the relative hydrophobicity of the selected amino_acids : to maximise
         hydrophobicity = (nb_hydrophile_out_of_plan/n_total_hydrophile) + (n_hydrophobe_in_plan/n_total_hydrophobic)
-        if  hydrophobicity > ref.best_hydrophobicity  or  len(in_between_planes) > ref.best_ratio_of_atoms:
+        if  hydrophobicity > ref.best_hydrophobicity  : #and  len(in_between_planes) > ref.best_ratio_of_atoms
             # Updating the "best" match
             ref.best_ratio_of_atoms = len(in_between_planes)
             ref.best_hydrophobicity = hydrophobicity
@@ -295,41 +295,6 @@ class Axis:
             # If its not better
             return False
     
-
-    def find_tm_segment(self, protein):
-        """
-        Find and write the Transmembrane segments in an output file. 
-        
-        Parameters
-        ----------
-        protein : Protein
-            Protein studied.
-        
-        Returns
-        -------
-        None
-        """
-        with open("../results/results_tm_segments_"+protein.name + ".txt", "w") as f_out:
-            in_between_planes = [] # List of residues contained between the two planes
-            for aa in (protein. amino_acid_sequence):
-                if (self.plane1.is_below(aa.point) and self.plane2.is_above(aa.point)) or \
-                    (self.plane2.is_below(aa.point) and self.plane1.is_above(aa.point)):
-                    in_between_planes.append(aa)
-            
-            tm = [] # List of transmembranes segments
-            for aa in in_between_planes:
-                if len(tm) is 0:
-                    tm.append(aa.id)
-                else:
-                    # Getting the last one added
-                    last_added = tm[(len(tm)-1)]
-                    if last_added + 1 is aa.id : 
-                        tm.append(aa.id)
-                    else : 
-                        # Writing in the output file
-                        f_out.write(f"Transmembrane segment from residue {min(tm)} to {max(tm)}\n")
-                        tm = []
-                        tm.append(aa.id)
 
 def find_points(n_points, center_coordinates):
     """
@@ -350,16 +315,17 @@ def find_points(n_points, center_coordinates):
     points = []
     for k in range(1, n_points + 1):  # n-points pour éviter division par 0
         h = -1 + (2 * (k - 1) / (n_points - 1))
-        theta = math.acos(h)
-        if k == 1 or k is n_points:
-            phi = 0
-        else:
-            phi = (phi + (3.6 / math.sqrt(n_points) * (1 / math.sqrt(1 - h * h)))) % (2 * math.pi)
-        # Centering on the mass center
-        x = center_coordinates.get_x() + math.sin(phi) * math.sin(theta)
-        y = center_coordinates.get_y() + math.cos(theta)
-        z = center_coordinates.get_z() + math.cos(phi) * math.sin(theta)
-        points.append(Point(x, y, z))
+        if h != 1 : 
+            theta = math.acos(h)
+            if k == 1 or k is n_points:
+                phi = 0
+            else:
+                phi = (phi + (3.6 / math.sqrt(n_points) * (1 / math.sqrt(1 - h * h)))) % (2 * math.pi)
+            # Centering on the mass center
+            x = center_coordinates.get_x() + math.sin(phi) * math.sin(theta)
+            y = center_coordinates.get_y() + math.cos(theta)
+            z = center_coordinates.get_z() + math.cos(phi) * math.sin(theta)
+            points.append(Point(x, y, z))
     # Get only the points from half circle :
     above_x_axis_points = [point for point in points if point.get_z() > center_coordinates.get_z()]
     return above_x_axis_points
