@@ -13,7 +13,7 @@ This program uses the tool DSSP combine with BioPython. You can install it :
 
 `sudo apt-get install dssp`
 
-This program also uses PyMol. Evreything is detailed in the virtual environment [TM_detect.yml](https://github.com/esoufir/TM_detect/blob/main/src/TM_detect.yml). 
+This program also uses PyMol. Evreything is detailed in the virtual environment [environment.yml](https://github.com/esoufir/TM_detect/blob/main/environment.yml). 
 
 
 Download the ZIP repository.   
@@ -28,7 +28,7 @@ conda activate mypymolenv
 
 ### Virtual environment
 
-You can use the virtual environment [TM_detect.yml](https://github.com/esoufir/TM_detect/blob/main/src/TM_detect.yml). 
+You can use the virtual environment [environment.yml](https://github.com/esoufir/TM_detect/blob/main/environment.yml). 
 
 
 ## Usage
